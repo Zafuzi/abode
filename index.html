@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Abode</title>
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="balance" id="tpl_balance">
+            <p>Balance: $__balance__</p>
+        </div>
+    </header>
+
+    <div id="tpl_budget" style="width: 100%;">
+        <div class="flex_row" style="padding: 0 10px;">
+            <p style="color: red;">Cost/Month: $__cost__</p>
+            <p style="color: green;">Yearly Budget: $__budget__</p>
+        </div>
+        <div style="padding: 0 10px;">
+            <hr id="month"/>
+            <hr id="year"/>    
+        </div>
+    </div>
+
+    <main>
+        <div class="page" id="tpl_map" data-page="map">
+            <div class="content">
+                <div class="grid_row" id="tpl_bodies">
+                    <div class="flex_row accordion">
+                        <h2>__name__</h2>
+                        <p>$__prepared_income__/day</p>
+                    </div>
+                    <div class="panel">
+                        <div class="rocket" id="tpl___id___satellites">
+                            <p>__payload_name__</p>
+                            <p style="text-align: right;">$__sat_income__/day</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="page" data-page="research">
+            <div class="content">
+                <h1>Research</h1>
+                <div class="flex_row" id="tpl_research">
+                    <p>__name__</p>
+                    <p style="text-align: right;">$__comma_cost__</p>
+                </div>
+            </div>
+        </div>
+        <div class="page" id="tpl_build" data-page="build">
+            <div class="content">
+                <h1>Build</h1>
+                <form class="gridForm" id="build_form" onsubmit="makeBuild(event, this);" onchange="calcBuildCost()">
+                    <label>
+                        Name
+                        <input type="text" required name="name" placeholder="Spacey McSpaceyFace">
+                    </label>
+                    <label>
+                        Engine
+                        <select name="build_engine">
+                            <option id="tpl_build_engine_option" value="__id__">__name__ (__power__ power __weight__ weight)</option>
+                        </select>
+                    </label>
+                    <label>
+                        Computer
+                        <select name="build_computer">
+                            <option id="tpl_build_computer_option" value="__id__">__name__ (__tflops__ tflops)</option>
+                        </select>
+                    </label>
+                    <label>
+                        Payloads
+                        <select name="build_payload">
+                            <option id="tpl_build_payload_option" value="__id__">__name__ (__weight__ weight $__income__/50tick)</option>
+                        </select>
+                    </label>
+                    <label>
+                        Destination
+                        <select name="build_destination">
+                            <option id="tpl_build_destination_option" value="__id__">__name__ (~__distance__km)</option>
+                        </select>
+                    </label>
+                    <input type="submit" value="Build">
+                </form>
+                <div id="tpl_build_cost">
+                    <p>Cost: $__cost__</p>
+                    <p>Fuel: __fuel__ kg of lightspeed powder</p>
+                </div>
+            </div>
+        </div>
+        <div class="page" id="tpl_launch" data-page="launch">
+            <div class="content">
+                <h1>Launch</h1>
+                <form class="gridForm" id="launch_form" onsubmit="launchRocket(event, this);" onchange="calcLaunch()">
+                    <label>
+                        Rocket
+                        <select name="rocket_id">
+                            <option id="tpl_launch_rocket_option" value="__id__">__name__ $__comma_cost__/launch</option>
+                        </select>
+                    </label>
+                    <input type="submit" value="Launch">
+                </form>
+                <div id="launch_console">
+
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p class="active" data-page="map">Map</p>
+        <p data-page="research">Research</p>
+        <p data-page="build">Build</p>
+        <p data-page="launch">Launch</p>
+    </footer>
+    <script src="replicate.js"></script>
+    <script defer src="main.js"></script>
+</body>
+</html>
