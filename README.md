@@ -1,4 +1,4 @@
-Abode bu Zafuzi
+# Abode bu Zafuzi
 
 Start by sending 1 probe to planet (including earth, max 1 per body)
 After sending probe you can launch a GPS satellite (max 5 per body)
