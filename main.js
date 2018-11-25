@@ -11,14 +11,13 @@ var overall_cost = 10000;
 // Array of celestial bodies to include in the map
 var bodies = [];
 
-var engines = [
-    {
+var engines = [{
         id: "prb",
         name: "Probe ION",
         power: 1,
         weight: 10,
         cost: 10000
-    }, 
+    },
     {
         id: "mk1",
         name: "MK I",
@@ -41,28 +40,33 @@ var computers = [{
     tflops: 120,
     cost: 25000
 }]
-
-var payloads = [
-    {
+// This will probably get very large
+var payloads = [{
         id: "probe",
         name: "Body Probe",
         weight: 5,
         income: 25,
-        cost: 25000
+        cost: 25000,
+        engine_id: "prb",
+        computer_id: 'volta'
     },
     {
         id: "mesh",
         name: "Mesh Network Sattelite",
         weight: 15,
         income: 50,
-        cost: 75000
+        cost: 75000,
+        engine_id: "mk1",
+        computer_id: 'volta'
     },
     {
         id: "fat_guy",
         name: "Fat guy in a little coat",
         weight: 35,
         income: 500,
-        cost: 100000
+        cost: 100000,
+        engine_id: "mk2",
+        computer_id: 'volta'
     }
 ]
 
@@ -81,6 +85,11 @@ var destinations = [{
         name: "Mars",
         distance: 54600000
     },
+    {
+        id: "io",
+        name: "IO",
+        distance: 588000000
+    },
 ]
 
 var research = [{
@@ -92,6 +101,7 @@ var research = [{
         payloads.filter(p => {
             if (p.id == "mesh") p.income += 50
         })
+        drawMap();
     }
 }]
 
@@ -109,139 +119,12 @@ function do_research(target) {
     research_target.active = true;
 }
 
-class Rocket {
-    constructor(name, engine, computer, payload, destination, cost) {
-        this.id = name.hashCode();
-        this.name = name, this.engine = engine, this.computer = computer,
-            this.payload = payload, this.destination = destination, this.cost = cost;
-    }
-}
-
 class Body {
     constructor(id, name) {
-        this.id = id, this.name = name, this.income = 0,
-            this.satellites = [], this.installations = [], this.mesh = 0,
-            this.buildings = 0, this.explored = false;
+        this.id = id, this.name = name, this.income = 0, this.cost = 0;
+        this.satellites = [], this.installations = [], this.mesh = 0,
+            this.buildings = 0, this.probe = 0;
     }
-}
-
-function makeBuild(e) {
-    e.preventDefault();
-    let form = document.querySelector('#build_form');
-    form = objectifyForm(form);
-    form.computer = computers.filter(computer => {
-        return computer.id == form.build_computer;
-    })[0]
-    form.engine = engines.filter(engine => {
-        return engine.id == form.build_engine;
-    })[0]
-    form.payload = payloads.filter(payload => {
-        return payload.id == form.build_payload;
-    })[0]
-    form.destination = destinations.filter(destination => {
-        return destination.id == form.build_destination;
-    })[0]
-    form.fuel = ((form.engine.weight + form.payload.weight) / form.engine.power) * (form.destination.distance / Math.pow(1.496, 8));
-    form.cost = Math.floor(form.computer.cost + form.engine.cost + form.payload.cost + (form.fuel * .16));
-    if (!rockets.filter(rocket => {
-            return rocket.id == form.name.hashCode()
-        }).length > 0) {
-        rockets.push(new Rocket(form.name, form.engine, form.computer, form.payload, form.destination, form.cost));
-        balance -= Math.floor(form.cost);
-    } else {
-        alert("A rocket with that name already exists")
-    }
-    update_balance();
-}
-
-function calcBuildCost() {
-    let form = document.querySelector('#build_form');
-    form = objectifyForm(form);
-
-    form.computer = computers.filter(computer => {
-        return computer.id == form.build_computer;
-    })[0]
-    form.engine = engines.filter(engine => {
-        return engine.id == form.build_engine;
-    })[0]
-    form.payload = payloads.filter(payload => {
-        return payload.id == form.build_payload;
-    })[0]
-    form.destination = destinations.filter(destination => {
-        return destination.id == form.build_destination;
-    })[0]
-    form.fuel = ((form.engine.weight + form.payload.weight) / form.engine.power) * (form.destination.distance / Math.pow(1.496, 8));
-    form.cost = Math.floor(form.computer.cost + form.engine.cost + form.payload.cost + (form.fuel * .16));
-
-    replicate("tpl_build_cost", [{
-        cost: comma(Math.floor(form.cost)),
-        fuel: comma(Math.floor(form.fuel))
-    }])
-}
-
-var launch_rocket;
-
-function launchRocket(e) {
-    e.preventDefault();
-
-    if (!launch_rocket) {
-        print("No rocket was selected. Aborting...")
-        return;
-    }
-
-    // Check for mission failure
-    let launch_cost = Math.floor(launch_rocket.cost / 2);
-    let destination = launch_rocket.destination.id;
-    let body;
-    bodies.forEach(b => {
-        if (b.id === destination) body = b;
-    });
-
-    if (!body) return;
-    if (launch_rocket.payload.id == "mesh") {
-        if (body.mesh >= 10) {
-            print(" | Only 10 mesh satellites allowed per body")
-            return;
-        } else {
-            body.mesh++;
-        }
-    }
-    if (launch_rocket.payload.id == "fat_guy") {
-        if (body.explored) {
-            print(" | Only 1 Fat Guy allowed per body")
-            return;
-        } else {
-            body.explored = true;
-        }
-    }
-
-    if (balance - launch_cost < 0) {
-        print("not enough money to launch " + launch_rocket.name);
-        return;
-    }
-
-
-    body.satellites.push(launch_rocket);
-    balance -= launch_cost;
-    overall_cost += launch_cost / 5;
-    update_balance();
-    print(launch_rocket.name + " launched");
-}
-
-function print(txt) {
-    let el = document.createElement('p');
-    let launch_console = document.querySelector("#launch_console");
-    el.innerText = formatDate(new Date()) + " | " + txt;
-    launch_console.prepend(el);
-}
-
-function calcLaunch() {
-    let form = document.querySelector('#launch_form');
-    form = objectifyForm(form);
-    let rocket = rockets.filter(rocket => {
-        return rocket.id == form.rocket_id;
-    })[0]
-    launch_rocket = rocket;
 }
 
 function update_balance() {
@@ -252,35 +135,115 @@ function update_balance() {
 
 function drawMap() {
     bodies.forEach(body => {
+        body.cost = 0;
+        body.income = 0;
+        for(let i = 0; i < body.probe; i++){
+            let payload;
+            payloads.filter(p => {
+                if (p.id == "probe") payload = p;
+            });
+            let cost = calc_payload_cost(payload, body).cost
+            console.log(cost);
+            body.cost += Math.floor(cost / 10);
+            body.income += (payload.income * Math.floor(12000 / 365));
+        }
+        for(let m = 0; m < body.mesh; m++){
+            let payload;
+            payloads.filter(p => {
+                if (p.id == "mesh") payload = p;
+            });
+            let cost = calc_payload_cost(payload, body).cost
+            console.log(cost);
+            body.cost += Math.floor(cost / 10);
+            body.income += (payload.income * Math.floor(12000 / 365));
+        }
+        console.log(body.cost)
         body.prepared_income = comma(body.income);
+        body.prepared_cost = comma(body.cost);
     })
     replicate('tpl_bodies', bodies, (e, d, i) => {
-
-        // XXX redo this whole thing so it grabs values dynamically. Preferably not at 2AM
-        let sats = [];
-        let mesh_count = 0;
-        let mesh_income = 0;
-        let probe_count = 0;
-        let probe_income = 0;
-        d.satellites.forEach(sat => {
-            if(sat.payload.id == "fat_guy"){
-                sats.push({payload_name: "Fat guy in a little coat", sat_income: comma(sat.payload.income * Math.floor(12000 / 365) ) })
+        // replicate possible actions for body
+        let probe = false,
+            mesh = false,
+            buildings = false;
+        let body = d;
+        if (body.probe == 0) probe = true;
+        if (body.probe > 0 && body.mesh < 10) mesh = true;
+        if (body.mesh == 10 && body.buildings < 10) buildings = true;
+        let actions = [];
+        if (probe) actions.push({
+            action_id: "probe",
+            action_name: "Launch Probe",
+            action_cost: comma(calc_payload_cost(massage_payload("probe", body), body).cost),
+            info: "Let's you launch a probe that will orbit the intended celestial body and allow you to send mesh network satellites",
+            action: () => {
+                launch("probe", body)
             }
-
-            if(sat.payload.id == "mesh"){
-                mesh_count++;
-                mesh_income += sat.payload.income;
+        });
+        if (mesh) actions.push({
+            action_id: "mesh",
+            action_name: "Launch Mesh Satellite",
+            action_cost: comma(calc_payload_cost(massage_payload("mesh", body), body).cost),
+            action: () => {
+                launch("mesh", body)
             }
-
-            if(sat.payload.id == "probe"){
-                probe_count++;
-                probe_income += sat.payload.income;
+        });
+        if (buildings) actions.push({
+            action_id: "building",
+            action_name: "Launch random building name",
+            action: () => {
+                launch("random_building", body)
             }
+        });
+        replicate("tpl_" + body.id + "_actions", actions, (ee, dd, ii) => {
+            ee.addEventListener('click', ec => {
+                console.log(dd);
+                dd.action();
+                drawMap();
+                update_balance();
+            })
         })
-        sats.push({payload_name: "Mesh Network "  + mesh_count + "/10", sat_income: comma(mesh_income * Math.floor(12000 / 365))})
-        sats.push({payload_name: "Probes "  + probe_count, sat_income: comma(probe_income * Math.floor(12000 / 365))})
-        replicate("tpl_" + d.id + "_satellites", sats);
+        replicate("tpl_mesh_count", [{
+            mesh_count: body.mesh
+        }]);
     });
+}
+function calc_payload_cost(payload, body) {
+    let fuel = ((payload.engine.weight + payload.weight) / payload.engine.power) * (payload.destination.distance / Math.pow(1.496, 8));
+    let cost = Math.floor(payload.computer.cost + payload.engine.cost + payload.cost + (fuel * .16));
+    return {fuel: fuel, cost: cost}
+}
+function massage_payload(id, body) {
+    let payload;
+    payloads.filter(p => {
+        if (p.id == id) payload = p;
+    });
+    engines.filter(engine => {
+        if (engine.id == payload.engine_id) payload.engine = engine
+    });
+    computers.filter(computer => {
+        if (computer.id == payload.computer_id) payload.computer = computer
+    });
+    destinations.filter(destination => {
+        if (destination.id == body.id) payload.destination = destination
+    });
+    return payload;
+}
+function launch(id, body) {
+    let payload = massage_payload(id, body);
+    let cost = calc_payload_cost(payload, body).cost;
+
+    // DO NO ACTION BEFORE CHECK
+    // calc cost to launch
+    // substract cost to launch from balance
+    // add cost to overall cost
+    // add income to body income and cost to body cost
+    if (balance - cost < 0) return;
+    body[id]++;
+    balance -= cost;
+    overall_cost += cost / 10;
+    body.cost += Math.floor(cost / 10);
+    body.income += (payload.income * Math.floor(12000 / 365));
 }
 
 var month_tick = 0,
@@ -304,22 +267,19 @@ function update(now) {
     // One day
     if (tick % Math.floor(12000 / 365) === 0) {
         bodies.forEach(body => {
-            body.income = 0;
-            body.satellites.forEach(sat => {
-                body.income += (sat.payload.income * Math.floor(12000 / 365));
-            })
             balance += body.income;
         })
         update_balance();
     }
+    `   `
     replicate("tpl_budget", [{
         cost: comma(Math.floor(overall_cost)),
         budget: comma(Math.floor(budget))
     }])
     let month = document.getElementById("month");
-    month.style.width = month_tick + "%";
+    month.style.height = month_tick + "%";
     let year_bar = document.getElementById("year");
-    year_bar.style.width = year_tick + "%";
+    year_bar.style.height = year_tick + "%";
     window.raf(update);
 }
 
@@ -391,9 +351,9 @@ function Nav(p) {
 function init() {
     update_balance();
     // Make Earth
-    bodies.push(new Body("earth", "Earth"))
-    bodies.push(new Body("earth_moon", "Earth Moon"))
-    bodies.push(new Body("mars", "Mars"))
+    destinations.forEach(destination => {
+        bodies.push(new Body(destination.id, destination.name));
+    })
 }
 
 document.addEventListener("DOMContentLoaded", dcl => {
@@ -431,6 +391,5 @@ function comma(x) {
 
 function formatDate(date) {
     let d = date.toISOString().slice(0, 19).replace('T', ' ');
-
     return d;
 }
