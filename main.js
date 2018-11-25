@@ -142,23 +142,26 @@ function drawMap() {
             payloads.filter(p => {
                 if (p.id == "probe") payload = p;
             });
-            console.log(payload.destination)
             let cost = calc_payload_cost(payload, body).cost
+            console.log("PAYLOAD COST: ", cost);
             body.cost += Math.floor(cost / 10);
             body.income += (payload.income * Math.floor(12000 / 365));
         }
+        console.log("COST AFTER PROBE: ", body.cost);
         for(let m = 0; m < body.mesh; m++){
             let payload;
             payloads.filter(p => {
                 if (p.id == "mesh") payload = p;
             });
             let cost = calc_payload_cost(payload, body).cost
+            console.log("MESH COST: ", cost);
             body.cost += Math.floor(cost / 10);
             body.income += (payload.income * Math.floor(12000 / 365));
         }
+        console.log("COST AFTER MESH: ", body.cost);
         body.prepared_income = comma(body.income);
         body.prepared_cost = comma(body.cost);
-    })
+    });
     replicate('tpl_bodies', bodies, (e, d, i) => {
         // replicate possible actions for body
         let probe = false,
@@ -195,7 +198,6 @@ function drawMap() {
         });
         replicate("tpl_" + body.id + "_actions", actions, (ee, dd, ii) => {
             ee.addEventListener('click', ec => {
-                console.log(dd);
                 dd.action();
                 update_balance();
                 drawMap();
@@ -207,9 +209,12 @@ function drawMap() {
     });
 }
 function calc_payload_cost(payload, body) {
-    let fuel = ((payload.engine.weight + payload.weight) / payload.engine.power) * (payload.destination.distance / Math.pow(1.496, 8));
+    let d;
+    destinations.filter(destination => {
+        if (destination.id == body.id) d = destination
+    });
+    let fuel = ((payload.engine.weight + payload.weight) / payload.engine.power) * (d.distance / Math.pow(1.496, 8));
     let cost = Math.floor(payload.computer.cost + payload.engine.cost + payload.cost + (fuel * .16));
-    console.log("cost: ", comma(cost))
     return {fuel: fuel, cost: cost}
 }
 function massage_payload(id, body) {
@@ -223,10 +228,6 @@ function massage_payload(id, body) {
     computers.filter(computer => {
         if (computer.id == payload.computer_id) payload.computer = computer
     });
-    destinations.filter(destination => {
-        if (destination.id == body.id) payload.destination = destination
-    });
-    // console.log("DESTINATION: ", payload.destination)
     return payload;
 }
 function launch(id, body) {
