@@ -89,7 +89,7 @@ var destinations = [{
         id: "io",
         name: "IO",
         distance: 588000000
-    },
+    }
 ]
 
 var research = [{
@@ -142,8 +142,8 @@ function drawMap() {
             payloads.filter(p => {
                 if (p.id == "probe") payload = p;
             });
+            console.log(payload.destination)
             let cost = calc_payload_cost(payload, body).cost
-            console.log(cost);
             body.cost += Math.floor(cost / 10);
             body.income += (payload.income * Math.floor(12000 / 365));
         }
@@ -153,11 +153,9 @@ function drawMap() {
                 if (p.id == "mesh") payload = p;
             });
             let cost = calc_payload_cost(payload, body).cost
-            console.log(cost);
             body.cost += Math.floor(cost / 10);
             body.income += (payload.income * Math.floor(12000 / 365));
         }
-        console.log(body.cost)
         body.prepared_income = comma(body.income);
         body.prepared_cost = comma(body.cost);
     })
@@ -199,8 +197,8 @@ function drawMap() {
             ee.addEventListener('click', ec => {
                 console.log(dd);
                 dd.action();
-                drawMap();
                 update_balance();
+                drawMap();
             })
         })
         replicate("tpl_mesh_count", [{
@@ -211,6 +209,7 @@ function drawMap() {
 function calc_payload_cost(payload, body) {
     let fuel = ((payload.engine.weight + payload.weight) / payload.engine.power) * (payload.destination.distance / Math.pow(1.496, 8));
     let cost = Math.floor(payload.computer.cost + payload.engine.cost + payload.cost + (fuel * .16));
+    console.log("cost: ", comma(cost))
     return {fuel: fuel, cost: cost}
 }
 function massage_payload(id, body) {
@@ -227,6 +226,7 @@ function massage_payload(id, body) {
     destinations.filter(destination => {
         if (destination.id == body.id) payload.destination = destination
     });
+    // console.log("DESTINATION: ", payload.destination)
     return payload;
 }
 function launch(id, body) {
@@ -242,8 +242,6 @@ function launch(id, body) {
     body[id]++;
     balance -= cost;
     overall_cost += cost / 10;
-    body.cost += Math.floor(cost / 10);
-    body.income += (payload.income * Math.floor(12000 / 365));
 }
 
 var month_tick = 0,
