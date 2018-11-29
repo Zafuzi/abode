@@ -32,15 +32,15 @@ $(function () {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    generate_bodies(8);
+    generate_bodies(1000);
     window.requestAnimationFrame(update);
 })
 
 function update() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    widthViewOriginal = canvas.width;
-    heightViewOriginal = canvas.height;
+    widthViewOriginal = canvas.width*2;
+    heightViewOriginal = canvas.height*2;
     if(widthView == 1.0) widthView = widthViewOriginal, heightView = heightViewOriginal;
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.scale(canvas.width/widthView, canvas.height/heightView);
