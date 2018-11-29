@@ -10,6 +10,19 @@
 </head>
 <body>
     <canvas id="canvas"></canvas>
+    <div class="slider">
+        <label id="tpl_sim_rate" for="rate_range">
+            Simulation Rate: __rate__
+        </label>
+        <input id="rate_range" type="range" min="1" max="10" value="1" step="1" onchange="grand_daddy_rate = $(this).val()">
+        <div id="tpl_info">
+            <p> 
+                Current Body Count: __body_count__
+            </p>
+            <p>Selected Body {name: __selected_name__, rate: __rate__}</p>
+        </div>
+        <input type="number" placeholder="Change Body Count" oninput="bodies = []; generate_bodies(parseInt($(this).val()));">
+    </div>
     <div class="modal_controls" id="tpl_modal_controls">
         <h2>__name__</h2>
     </div>

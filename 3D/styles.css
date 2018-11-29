@@ -3,7 +3,7 @@ body, html {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background: rgb(15, 28, 48);
+    background: rgb(0, 0, 0);
 }
 
 .modal_controls {
@@ -15,4 +15,27 @@ body, html {
     min-height: 100px;
     color: #fff;
     padding: 10px;
+}
+
+.slider {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    padding: 10px;
+    width: calc(100% - 20px);
+    background: rgba(0,0,0,.5);
+    display: flex;
+    flex-flow: column;
+    color: #fff;
+}
+.slider label {
+    display: flex;
+    flex-flow: column;
+    color: #fff;
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin: 10px;
+}   
+.slider input {
+    margin: 10px;
 }
