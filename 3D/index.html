@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,27 @@
     <link href="styles.css" rel="stylesheet">
     <script src="./fabric.min.js"></script>
 </head>
+
 <body>
+    <header>
+        <div class="start">
+            <a href="#" onclick="selection = bodies[me];">
+                <img class="icon" src="../images/home.png">
+            </a>
+        </div>
+        <div class="middle" id="tpl_selected">
+            <div id="body_selector" onclick="bodySelector();">
+                <p id="current_body">__selected_name__</p>
+                <span id="current_body_chevron">&#9660;</span>
+                <div class="hid" id="body_list">
+                    <p id="tpl_body_selector">__name__</p>
+                </div>
+            </div>
+        </div>
+        <div class="end">
+            <p>END</p>
+        </div>
+    </header>
     <canvas id="canvas"></canvas>
     <div class="slider">
         <label id="tpl_sim_rate" for="rate_range">
@@ -16,21 +37,18 @@
         </label>
         <input id="rate_range" type="range" min="1" max="10" value="1" step="1" onchange="grand_daddy_rate = $(this).val()">
         <div id="tpl_info">
-            <p> 
+            <p>
                 Current Body Count: __body_count__
             </p>
             <p>Selected Body {name: __selected_name__, rate: __rate__}</p>
         </div>
         <input type="number" placeholder="Change Body Count" oninput="bodies = []; generate_bodies(parseInt($(this).val()));">
     </div>
-    <div class="modal_controls" id="tpl_modal_controls">
-        <h2>__name__</h2>
-    </div>
-    <script
-        src="https://code.jquery.com/jquery-3.3.1.min.js"
-        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
     <script src="replicate.js"></script>
     <script src="main.js"></script>
 </body>
+
 </html>

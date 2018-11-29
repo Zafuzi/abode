@@ -13,12 +13,18 @@ var widthViewOriginal = 1.0; //actual width and height of zoomed and panned disp
 var heightViewOriginal = 1.0;
 var widthView = widthViewOriginal; //actual width and height of zoomed and panned display
 var heightView = heightViewOriginal;
+var scale = 1;
 
-var grand_daddy_rate = 1;
+var grand_daddy_rate = .5;
 var selection = null;
+var me;
+
+var clicked = false;
+var main_music;
 
 $(function () {
-    replicate("tpl_modal_controls", [])
+    replicate("tpl_selected", [{selected_name: ""}])
+    replicate("tpl_body_selector", [])
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d')
     canvas.addEventListener("mousedown", handleMouseDown, false); // click and hold to pan
@@ -34,6 +40,26 @@ $(function () {
 
     generate_bodies(getRandomInt(3,15));
     window.requestAnimationFrame(update);
+    let p = setInterval(function() {
+        if(!clicked) return;
+        main_music = new Audio('../music/01.mp3');
+        main_music.play();
+        clearInterval(p);
+    }, 100);
+})
+
+function bodySelector(){
+    replicate("tpl_body_selector", bodies, (e,d,i) => {
+        $(e).on('click', () => {
+            selection = d;
+        });
+    })
+    $("#current_body_chevron").toggleClass('flipped')
+    $("#body_list").toggleClass('hid');
+}
+
+document.addEventListener("click", e => {
+    clicked = true;
 })
 
 function update() {
@@ -53,9 +79,17 @@ function update() {
     })
     bodies.forEach(body => {
         body.color = body.z_color;
+        body.selected = false;
     })
     if (selection) {
         selection.click()
+        selection.selected = true;
+        // move camera to focus on body x and y
+        let targetX = selection.x - widthView/2;
+        let targetY = selection.y - heightView/2;
+        // lerp to target
+        xleftView = Math.lerp(xleftView, targetX, .1);
+        ytopView = Math.lerp(ytopView, targetY, .1);
     }
     let s_rate = 0;
     if(selection&&selection.rotate) s_rate = grand_daddy_rate/100 / selection.origin.rate;
@@ -71,10 +105,10 @@ function handleMouseDown(e) {
     mouseDown = true;
     selection = null;
 
-    var scale = {x: canvas.width/widthView, y: canvas.height/heightView}
+    var local_scale = {x: canvas.width/widthView, y: canvas.height/heightView}
 
-    var X = parseInt(e.clientX)/scale.x
-    var Y = parseInt(e.clientY)/scale.y
+    var X = parseInt(e.clientX)/local_scale.x
+    var Y = parseInt(e.clientY)/local_scale.y
     // this will also work for ui elements
     bodies.forEach(body => {
         let xlow = body.x - body.r - xleftView;
@@ -85,6 +119,7 @@ function handleMouseDown(e) {
         if (X > xlow && X < xhigh) {
             if (Y > ylow && Y < yhigh) {
                 selection = body;
+                console.log(body.x, body.y);
             }
         }
     })
@@ -99,17 +134,8 @@ var lastY = 0;
 function handleMouseMove(e) {
     e.preventDefault();
     var X, Y;
-    if(e.type == "touchmove"){
-        let touch = event.touches[0]
-        let target = event.target
-        let c = $('#canvas')[0]
-        X = touch.pageX - c.offsetLeft - c.clientLeft + c.scrollLeft;
-        Y = touch.pageY - c.offsetTop - c.clientTop + c.scrollTop;
-        console.log(X,Y, e)
-    }else {
-        X = event.clientX - this.offsetLeft - this.clientLeft + this.scrollLeft;
-        Y = event.clientY - this.offsetTop - this.clientTop + this.scrollTop;
-    }
+    X = event.clientX - this.offsetLeft - this.clientLeft + this.scrollLeft;
+    Y = event.clientY - this.offsetTop - this.clientTop + this.scrollTop;
 
     if (mouseDown) {
         var dx = (X - lastX) / canvas.width * widthView;
@@ -119,20 +145,18 @@ function handleMouseMove(e) {
     }
     lastX = X;
     lastY = Y;
-
 }
 
 function handleMouseWheel(e) {
-
     var x = widthView / 2 + xleftView; // View coordinates
     var y = heightView / 2 + ytopView;
 
-    var scale = (event.wheelDelta < 0 || event.detail > 0) ? 1.1 : .9;
+    scale = (event.wheelDelta < 0 || event.detail > 0) ? 1.1 : .9;
     widthView *= scale;
     heightView *= scale;
     console.log(widthView, heightView)
 
-
+    // reset camera to max view
     if (widthView > widthViewOriginal || heightView > heightViewOriginal) {
         widthView = widthViewOriginal;
         heightView = heightViewOriginal;
@@ -165,17 +189,54 @@ class Body {
     }
     draw() {
         let self = this;
+
+        // Shadow?
+        // ctx.beginPath();
+        // ctx.arc(self.x+4, self.y+4, self.r, 0, 2 * Math.PI);
+
+        // ctx.fill();
+        // ctx.closePath();
+
         ctx.beginPath();
         ctx.arc(self.x, self.y, self.r, 0, 2 * Math.PI);
-        ctx.fillStyle = self.color;
+        let rgba = hexToRgbA(self.z_color);
+        if(!self.selected)
+            rgba.a = .2;
+        ctx.fillStyle = "rgba(" + [rgba.r, rgba.g, rgba.b, rgba.a].join(',') +")";
         ctx.fill();
+        if(self.selected) {
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 5;
+            ctx.stroke()
+        }
         ctx.closePath();
     }
     click() {
         let self = this;
         // convert original color from hex first then opacity
-        self.color = "rgba(255, 255, 255, 0.5)";
+        let rgba = hexToRgbA(self.z_color);
+        rgba.a = 1;
+        self.color = "rgba(" + [rgba.r, rgba.g, rgba.b, rgba.a].join(',') +")";
+        let selected_element = $('#current_body');
+        let ok = selected_element.text() != self.name;
+        console.log(ok)
+        if(ok) {
+            replicate("tpl_selected", [{id: self.id, selected_name: self.name}])
+        }
     }
+}
+
+function hexToRgbA(hex){
+    var c;
+    if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+        c= hex.substring(1).split('');
+        if(c.length== 3){
+            c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+        }
+        c= '0x'+c.join('');
+        return { r: (c>>16)&255, g: (c>>8)&255, b: c&255,a: 1};
+    }
+    throw new Error('Bad Hex');
 }
 
 // var canvas_elements = [];
@@ -191,10 +252,10 @@ function generate_bodies(amount) {
     for (let i = 0; i < amount; i++) {
         let id = makeid();
         // make this a range
-        let r = getRandomInt(6, 10);
+        let r = getRandomInt(60, 100);
         let x = 0;
         if (i > 0) {
-            r = getRandomInt(1, 4);
+            r = getRandomInt(10, 40);
             let d = getRandomInt(2, amount);
             bodies.push(new Body(
                 sol.x + deg2xy(sol.r * d, i * (360/amount)).x, 
@@ -203,11 +264,15 @@ function generate_bodies(amount) {
             ))
         } else {
             sol.r = r;
-            bodies.push(new Body(sol.x, sol.y, sol.r, getHue(sol.r, 0, 60)))
+            let b = new Body(sol.x, sol.y, sol.r, getRandomColor())
+            b.name = "star_" + b.id
+            bodies.push(b)
         }
         console.log(x)
-
     }
+    me = getRandomInt(1,bodies.length);
+    selection = bodies[me]
+    selection.name = "Home World"
 }
 
 function getHue(percent, start, end) {
@@ -247,3 +312,9 @@ function deg2xy(radius, angle) {
         y: y
     }
 }
+
+Math.lerp = function (value1, value2, amount) {
+	amount = amount < 0 ? 0 : amount;
+	amount = amount > 1 ? 1 : amount;
+	return value1 + (value2 - value1) * amount;
+};
