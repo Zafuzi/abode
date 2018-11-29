@@ -208,3 +208,12 @@ footer .active {
 .col { flex-flow: column; }
 .align_center { align-items: center; }
 .justify_center { justify-content: center; }
+
+
+
+@media only screen and (min-width: 428px) {
+    .content { 
+        max-width: 600px;
+        margin: 0 auto;
+    }
+}
