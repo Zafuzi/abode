@@ -14,7 +14,7 @@ var heightViewOriginal = 1.0;
 var widthView = widthViewOriginal; //actual width and height of zoomed and panned display
 var heightView = heightViewOriginal;
 
-
+var grand_daddy_rate = 1;
 var selection = null;
 
 $(function () {
@@ -32,15 +32,15 @@ $(function () {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    generate_bodies(1000);
+    generate_bodies(getRandomInt(3,15));
     window.requestAnimationFrame(update);
 })
 
 function update() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    widthViewOriginal = canvas.width*2;
-    heightViewOriginal = canvas.height*2;
+    widthViewOriginal = canvas.width;
+    heightViewOriginal = canvas.height;
     if(widthView == 1.0) widthView = widthViewOriginal, heightView = heightViewOriginal;
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.scale(canvas.width/widthView, canvas.height/heightView);
@@ -57,6 +57,10 @@ function update() {
     if (selection) {
         selection.click()
     }
+    let s_rate = 0;
+    if(selection&&selection.rotate) s_rate = grand_daddy_rate/100 / selection.origin.rate;
+    replicate("tpl_info", [{body_count: bodies.length, selected_name: selection ? selection.name : "", rate: s_rate}])
+    replicate("tpl_sim_rate", [{rate: grand_daddy_rate}])
     window.requestAnimationFrame(update);
 }
 
@@ -145,6 +149,8 @@ var bodies = [];
 
 class Body {
     constructor(x, y, r, color, rotate, origin) {
+        this.id = makeid();
+        this.name = "body_" + this.id;
         this.z_color = color;
         this.x = x, this.y = y, this.r = r, this.color = color, this.rotate = rotate, this.origin = origin;
         if(rotate)
@@ -155,7 +161,7 @@ class Body {
         let origin = self.origin;
         self.x = origin.sol.x - deg2xy(origin.distance, self.angle).x;
         self.y = origin.sol.y - deg2xy(origin.distance, self.angle).y;
-        self.angle += 1 / origin.rate;
+        self.angle += grand_daddy_rate/100 * origin.rate;
     }
     draw() {
         let self = this;
@@ -185,10 +191,10 @@ function generate_bodies(amount) {
     for (let i = 0; i < amount; i++) {
         let id = makeid();
         // make this a range
-        let r = getRandomInt(60, 100);
+        let r = getRandomInt(6, 10);
         let x = 0;
         if (i > 0) {
-            r = getRandomInt(10, 40);
+            r = getRandomInt(1, 4);
             let d = getRandomInt(2, amount);
             bodies.push(new Body(
                 sol.x + deg2xy(sol.r * d, i * (360/amount)).x, 
