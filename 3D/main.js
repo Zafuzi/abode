@@ -95,12 +95,13 @@ var game = {
     selection: null,
     me: null,
     bodies: [],
-    grand_daddy_rate: 1,
+    grand_daddy_rate: .2,
+    taxRate: 10,
     resources: {
         ore: 0,
         iron: 0,
         gold: 0,
-        units: 500000
+        units: 0
     },
     initBodies(amount) {
         let sol = {
@@ -131,16 +132,16 @@ var game = {
                 let b = new Body(sol.x, sol.y, sol.r, utils.getRandomColor())
                 b.name = "star_" + b.id
                 b.discovered = true;
+                console.log(b);
                 game.bodies.push(b)
             }
         }
         game.me = utils.getRandomInt(1, game.bodies.length);
-        game.selection = game.bodies[game.me]
-        game.selection.name = "Home World"
-        game.selection.discovered = true;
-        game.selection.ore_rate = utils.getRandomInt(5, 10);
-        game.selection.metal_rate = utils.getRandomInt(1, 5);
-        game.selection.gold_rate = utils.getRandomInt(1, 3);
+        let b = game.bodies[game.me]
+        
+        b.name = "Home World"
+        b.discovered = true;
+        game.selection = b
     },
     redrawBodies() {
         let bodies = this.bodies;
@@ -168,14 +169,19 @@ var game = {
 
     },
     redraw() {
+        this.redrawBodies();
+
         let resources = game.resources;
         replicate("tpl_resources", [{
-            ore: Math.floor(resources.ore),
-            iron: Math.floor(resources.iron),
-            units: Math.floor(resources.units),
-            gold: Math.floor(resources.gold)
+            ore: utils.comma(Math.floor(resources.ore)),
+            iron: utils.comma(Math.floor(resources.iron)),
+            units: utils.comma(Math.floor(resources.units)),
+            gold: utils.comma(Math.floor(resources.gold))
         }])
-        this.redrawBodies();
+        if(game.selection) {
+            game.selection.comma_units = utils.comma(Math.floor(game.selection.units));
+            replicate("tpl_selection", [game.selection])
+        }
     },
     init() {
         this.initBodies(utils.getRandomInt(4,12));
@@ -189,11 +195,35 @@ var sound = {
     main: null
 }
 
+var actions = [
+    {
+        action_name: "Build a Mine", 
+        icon: "iron_mine",
+        action: () => {
+            game.selection.add("mine");
+        }
+    },
+    {
+        action_name: "Build a Mine", 
+        icon: "iron_mine",
+        action: () => {
+            game.selection.add("mine");
+        }
+    },
+    {
+        action_name: "Build a Mine", 
+        icon: "iron_mine",
+        action: () => {
+            game.selection.add("mine");
+        }
+    },
+]
+
 $(function () {
     canvasState.init();
     game.init();
     requestAnimationFrame(redraw);
-    console.log(sound.current_song)
+
     let p = setInterval(function() {
         if(!sound.clicked) return;
         playMusic();
@@ -217,6 +247,10 @@ $(window).on('resize', e => {
 })
 document.addEventListener('click', function() {
     sound.clicked = true;
+    if(game.selection == null) {
+        replicate("tpl_actions", [])
+        replicate("tpl_selection", [])
+    }
 })
 
 function redraw() {

@@ -1,4 +1,8 @@
 const utils = {
+    comma: function(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    },
+
     deg2xy: function(radius, angle) {
         let x = radius * Math.cos(Math.PI * 2 * angle / 360);
         let y = radius * Math.sin(Math.PI * 2 * angle / 360);
@@ -6,6 +10,11 @@ const utils = {
             x: x,
             y: y
         }
+    },
+
+    formatDate: function(date) {
+        let d = date.toISOString().slice(0, 19).replace('T', ' ');
+        return d;
     },
 
     getHue: function(percent, start, end) {

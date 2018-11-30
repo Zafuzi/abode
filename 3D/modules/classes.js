@@ -4,6 +4,9 @@ class Body {
         this.name = "body_" + this.id;
         this.z_color = color;
         this.x = x, this.y = y, this.r = r, this.color = color, this.rotate = rotate, this.origin = origin;
+        this.mines = 1;
+        this.mine_rate = 20;
+        this.units = 0;
         if(rotate)
             this.angle = origin.angle;
     }
@@ -13,10 +16,10 @@ class Body {
         self.x = origin.sol.x - utils.deg2xy(origin.distance, self.angle).x;
         self.y = origin.sol.y - utils.deg2xy(origin.distance, self.angle).y;
         self.angle += game.grand_daddy_rate/100 * origin.rate;
-
-        game.resources.iron += self.metal_rate/100 || 0;
-        game.resources.ore += self.ore_rate/10 || 0;
-        game.resources.gold += self.gold_rate/100 || 0;
+        let income = (self.mines * self.mine_rate)
+        let tax = .1;
+        game.resources.units += (income * tax)/10;
+        self.units += income - (income*tax);
     }
     draw() {
         let self = this;
@@ -43,9 +46,27 @@ class Body {
         let selected_element = $('#current_body');
         let ok = selected_element.text() != self.name;
         if(ok) {
+            console.log(self);
             replicate("tpl_selected", [{id: self.id, selected_name: self.name}])
+            replicate("tpl_actions", actions, (e,d,i) => {
+                $(e).on('click', function() {
+                    console.log("click");
+                    d.action();
+                })
+            });
             var a = new Audio("./music/plop.wav");
             a.play();
+        }
+    }
+    add(item){
+        let self = this;
+        switch(item) {
+            case "mine":
+                if(self.units - 50000 >= 0) {
+                    self.mines += 1;
+                    self.units -= 50000
+                }
+                break;
         }
     }
 }
