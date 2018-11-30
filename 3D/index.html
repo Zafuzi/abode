@@ -12,15 +12,7 @@
 
 <body>
     <header>
-        <div class="start">
-            <div class="resources" id="tpl_resources">
-                <p><img class="tiny_icon" src="../images/wallet.png"> __units__</p>
-                <p><img class="tiny_icon" src="../images/ore.png"> __ore__</p>
-                <p><img class="tiny_icon" src="../images/iron.png"> __iron__</p>
-                <p><img class="tiny_icon" src="../images/gold.png"> __gold__</p>
-            </div>
-        </div>
-        <div class="middle" id="tpl_selected">
+        <div class="start" id="tpl_selected">
             <div id="body_selector" onclick="bodySelector();">
                 <p id="current_body">__selected_name__</p>
                 <span id="current_body_chevron">&#9660;</span>
@@ -46,6 +38,13 @@
             <p>Selected Body {name: __selected_name__, rate: __rate__}</p>
         </div>
         <input type="number" placeholder="Change Body Count" oninput="bodies = []; generate_bodies(parseInt($(this).val()));">
+    </div>
+
+    <div class="resources" id="tpl_resources">
+        <p><img class="tiny_icon" src="../images/wallet.png"> __units__</p>
+        <p><img class="tiny_icon" src="../images/ore.png"> __ore__</p>
+        <p><img class="tiny_icon" src="../images/iron.png"> __iron__</p>
+        <p><img class="tiny_icon" src="../images/gold.png"> __gold__</p>
     </div>
     
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
