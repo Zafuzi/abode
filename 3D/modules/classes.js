@@ -44,7 +44,7 @@ class Body {
         let ok = selected_element.text() != self.name;
         if(ok) {
             replicate("tpl_selected", [{id: self.id, selected_name: self.name}])
-            var a = new Audio("../music/plop.wav");
+            var a = new Audio("./music/plop.wav");
             a.play();
         }
     }

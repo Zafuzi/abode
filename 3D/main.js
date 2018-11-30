@@ -202,7 +202,7 @@ $(function () {
 })
 
 function playMusic(){
-    sound.main = new Audio('../music/' + sound.current_song + '.mp3');
+    sound.main = new Audio('./music/' + sound.current_song + '.mp3');
     sound.main.play();
     sound.main.addEventListener('ended', function(){
         sound.current_song += 1;
