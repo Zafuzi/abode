@@ -309,6 +309,7 @@ function probe() {
     let bs = bodies.filter((body, index) => {
         if(index < 1) return;
         if(body.id == me.id) return;
+        if(body.discovered) return;
         body.index = index;
         return body;
     })
@@ -316,6 +317,7 @@ function probe() {
     let b = bs[rand];
     let bb = bodies[b.index];
     bb.discovered = true;
+    selection = bb;
 }
 
 function getHue(percent, start, end) {
