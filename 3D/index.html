@@ -10,7 +10,7 @@
     <link href="styles.min.css" rel="stylesheet">
 
     <!-- For Devlopment -->
-    <!-- <link href="styles.css" rel="stylesheet"> -->
+    <link href="styles.css" rel="stylesheet">
 </head>
 
 <body>
@@ -43,6 +43,19 @@
         <input type="number" placeholder="Change Body Count" oninput="bodies = []; generate_bodies(parseInt($(this).val()));">
     </div>
 
+    <div class="actions">
+        <div class="action_info" id="tpl_selection">
+            <p>__name__</p>
+            <p>Wealth: __comma_units__</p>
+            <p>Mines: __mines__</p>
+        </div>
+        <div class="action_groups">
+            <div id="tpl_actions">
+                <p class="action_group"><img class="icon" src="./images/__icon__.png"></p>
+            </div>
+        </div>
+    </div>
+
     <div class="resources" id="tpl_resources">
         <p><img class="tiny_icon" src="./images/wallet.png"> __units__</p>
         <p><img class="tiny_icon" src="./images/ore.png"> __ore__</p>
@@ -57,7 +70,7 @@
     <script src="./modules/replicate.min.js"></script>
     <script src="./modules/helpers.min.js"></script>
     <script src="./modules/classes.min.js"></script>
-    <script defer src="main.min.js"></script>
+    <script defer src="main.js"></script>
 
     <!-- For Devlopment -->
     <!-- <script async src="./modules/replicate.min.js"></script>
