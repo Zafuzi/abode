@@ -90,6 +90,27 @@ header .end {
     background: rgba(0,0,0,.5);
 }
 
+.resources {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-column-gap: 10px;
+    align-items: center;
+    padding: 0 10px;
+}
+.resources p {
+    display: flex;
+    height: inherit;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+.resources p img {
+    padding-right: 10px;
+}
+
 .modal_controls {
     background: rgba(0,0,0,.5);
     position: fixed;
@@ -129,6 +150,15 @@ header .end {
     height: 24px;
     margin: 0;
     padding: 0;
+}
+
+.tiny_icon {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    object-fit: contain;
+    display: flex;
 }
 
 .hid {

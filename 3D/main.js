@@ -21,8 +21,18 @@ var me;
 
 var clicked = false;
 var main_music;
+var music_length = 2; // update to reflect songs
+var current_song = 0;
+
+var resources = {
+    ore: 0,
+    iron: 0,
+    gold: 0,
+    units: 500000
+}
 
 $(function () {
+    replicate("tpl_resources", [resources])
     replicate("tpl_selected", [{selected_name: ""}])
     replicate("tpl_body_selector", [])
     canvas = document.getElementById('canvas');
@@ -42,14 +52,27 @@ $(function () {
     window.requestAnimationFrame(update);
     let p = setInterval(function() {
         if(!clicked) return;
-        main_music = new Audio('../music/01.mp3');
-        main_music.play();
+        playMusic();
         clearInterval(p);
     }, 100);
 })
 
+function playMusic(){
+    main_music = new Audio('../music/' + current_song + '.mp3');
+    main_music.play();
+    main_music.addEventListener('ended', function(){
+        current_song += 1;
+        if(current_song > music_length) current_song = 0;
+        playMusic();
+    })
+}
+
 function bodySelector(){
-    replicate("tpl_body_selector", bodies, (e,d,i) => {
+    let bs = bodies.filter((body, index) => {
+        if(body.discovered)
+            return body;
+    })
+    replicate("tpl_body_selector", bs, (e,d,i) => {
         $(e).on('click', () => {
             selection = d;
         });
@@ -75,7 +98,7 @@ function update() {
         if(body.rotate) {
             body.update();
         }
-        body.draw()
+        if(body.discovered) body.draw()
     })
     bodies.forEach(body => {
         body.color = body.z_color;
@@ -91,10 +114,8 @@ function update() {
         xleftView = Math.lerp(xleftView, targetX, .1);
         ytopView = Math.lerp(ytopView, targetY, .1);
     }
-    let s_rate = 0;
-    if(selection&&selection.rotate) s_rate = grand_daddy_rate/100 / selection.origin.rate;
-    replicate("tpl_info", [{body_count: bodies.length, selected_name: selection ? selection.name : "", rate: s_rate}])
-    replicate("tpl_sim_rate", [{rate: grand_daddy_rate}])
+
+    replicate("tpl_resources", [{ore: Math.floor(resources.ore), iron: Math.floor(resources.iron), units: Math.floor(resources.units), gold: Math.floor(resources.gold)}])
     window.requestAnimationFrame(update);
 }
 
@@ -186,6 +207,10 @@ class Body {
         self.x = origin.sol.x - deg2xy(origin.distance, self.angle).x;
         self.y = origin.sol.y - deg2xy(origin.distance, self.angle).y;
         self.angle += grand_daddy_rate/100 * origin.rate;
+
+        resources.iron += self.metal_rate/100 || 0;
+        resources.ore += self.ore_rate/10 || 0;
+        resources.gold += self.gold_rate/100 || 0;
     }
     draw() {
         let self = this;
@@ -219,9 +244,10 @@ class Body {
         self.color = "rgba(" + [rgba.r, rgba.g, rgba.b, rgba.a].join(',') +")";
         let selected_element = $('#current_body');
         let ok = selected_element.text() != self.name;
-        console.log(ok)
         if(ok) {
             replicate("tpl_selected", [{id: self.id, selected_name: self.name}])
+            var a = new Audio("../music/plop.wav");
+            a.play();
         }
     }
 }
@@ -266,13 +292,30 @@ function generate_bodies(amount) {
             sol.r = r;
             let b = new Body(sol.x, sol.y, sol.r, getRandomColor())
             b.name = "star_" + b.id
+            b.discovered = true;
             bodies.push(b)
         }
-        console.log(x)
     }
     me = getRandomInt(1,bodies.length);
     selection = bodies[me]
     selection.name = "Home World"
+    selection.discovered = true;
+    selection.ore_rate = getRandomInt(5,10);
+    selection.metal_rate = getRandomInt(1,5);
+    selection.gold_rate = getRandomInt(1,3);
+}
+
+function probe() {
+    let bs = bodies.filter((body, index) => {
+        if(index < 1) return;
+        if(body.id == me.id) return;
+        body.index = index;
+        return body;
+    })
+    let rand = getRandomInt(0, bs.length);
+    let b = bs[rand];
+    let bb = bodies[b.index];
+    bb.discovered = true;
 }
 
 function getHue(percent, start, end) {

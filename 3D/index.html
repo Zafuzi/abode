@@ -13,9 +13,12 @@
 <body>
     <header>
         <div class="start">
-            <a href="#" onclick="selection = bodies[me];">
-                <img class="icon" src="../images/home.png">
-            </a>
+            <div class="resources" id="tpl_resources">
+                <p><img class="tiny_icon" src="../images/wallet.png"> __units__</p>
+                <p><img class="tiny_icon" src="../images/ore.png"> __ore__</p>
+                <p><img class="tiny_icon" src="../images/iron.png"> __iron__</p>
+                <p><img class="tiny_icon" src="../images/gold.png"> __gold__</p>
+            </div>
         </div>
         <div class="middle" id="tpl_selected">
             <div id="body_selector" onclick="bodySelector();">
@@ -27,7 +30,7 @@
             </div>
         </div>
         <div class="end">
-            <p>END</p>
+            <p onclick="probe()">Launch a probe</p>
         </div>
     </header>
     <canvas id="canvas"></canvas>
