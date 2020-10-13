@@ -10,16 +10,52 @@ html {
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
-#resources,
-#structures {
-    display: flex;
-    flex-flow: row wrap;
-}
-
 .resource,
 .structure {
-    margin: 0 15px;
-    display: flex;
-    flex-flow: row nowrap;
+    padding: 8px;
+}
+
+table {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+    margin: 15px auto;
+}
+
+table td,
+table th {
+    border: 1px solid salmon;
+    padding: 8px;
+    color: #FFF;
+}
+
+table tr:hover {
+    background-color: rgb(129, 74, 74);
+}
+
+table th {
+    padding: 12px;
+    text-align: left;
+    background-color: rgb(129, 74, 74);
+    color: white;
+}
+
+table th div {
+    display: grid;
+    grid-template-columns: 48px auto;
+    grid-column-gap: 10px;
     align-items: center;
+}
+
+table th div img {
+    height: 48px;
+    width: 48px;
+}
+
+caption {
+    text-align: left;
+}
+
+.hid {
+    display: none;
 }
