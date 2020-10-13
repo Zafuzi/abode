@@ -33,27 +33,23 @@
             <caption>Structures</caption>
             <thead>
                 <tr>
-                    <th> Buy </th>
                     <th> Name </th>
-                    <th> Description </th>
                     <th> Count </th>
+                    <th> Buy </th>
                     <th> Production Rate </th>
-                    <th> Active </th>
+                    <th> Automatic </th>
                 </tr>
             </thead>
             <tbody>
                 <tr class="structure" v-for=" structure in Structures ">
-                    <td>
-                        <button @click="construct(structure, 1)" :disabled="structure.costs.Credits * 1 >= Resources.Credits">x1</button>
-                        <button @click="construct(structure, 10)" :disabled="structure.costs.Credits * 10 >= Resources.Credits">x10</button>
-                        <button @click="construct(structure, 100)" :disabled="structure.costs.Credits * 100 >= Resources.Credits">x100</button>
-                        <span> Cost: {{ numFmt(structure.costs.Credits, 2) }}</span>
-                    </td>
                     <td>{{ structure.name }}</td>
-                    <td>{{ structure.desc }}</td>
                     <td>{{ structure.count }}</td>
-                    <td>{{ structure.active ? numFmt(structure.rate * structure.count * structure.multiplier, 4) : 0 }}/s </td>
-                    <td><input type=checkbox v-model="structure.active"></td>
+                    <td>
+                        <button @click="construct(structure, 1)" :disabled="structure.cost * 1 >= Resources.Credits">Launch</button>
+                        <span> Cost: {{ numFmt(structure.cost, 2) }}</span>
+                    </td>
+                    <td><span class=progress :style="{ width: structure.current_timer*10 + '%' }"></span></td>
+                    <td><input type=checkbox v-model="structure.auto"></td>
                 </tr>
             </tbody>
         </table>

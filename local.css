@@ -56,6 +56,13 @@ caption {
     text-align: left;
 }
 
+.progress {
+    width: 100%;
+    background: green;
+    display: block;
+    height: 24px;
+}
+
 .hid {
     display: none;
 }
