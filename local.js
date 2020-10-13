@@ -62,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let loop = function() {
         Resources.Credits += Structures[0].count * 100;
+        Resources.Credits += Structures[1].count * 1000;
         Structures.forEach(s => {
             if (s.auto && s.current_timer == 0) {
                 app.construct(s, 1);
