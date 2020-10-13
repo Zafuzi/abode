@@ -19,8 +19,10 @@
             </div>
         </div>
 
-        <div class=structure v-for=" structure in Structures ">
-            <span>{{Icons[structure.name]}}</span> {{ structure.name }}
+        <div id=structures>
+            <div class=structure v-for=" structure in Structures ">
+                <span>{{Icons[structure.name]}}</span> {{ structure.name }}
+            </div>
         </div>
     </div>
     <script src="sleepless.js "></script>

@@ -16,7 +16,8 @@ html {
     flex-flow: row wrap;
 }
 
-.resource {
+.resource,
+.structure {
     margin: 0 15px;
     display: flex;
     flex-flow: row nowrap;
