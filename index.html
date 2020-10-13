@@ -15,7 +15,7 @@
         {{ message }}
         <div id=resources>
             <div class=resource :title="key" v-for="(resource, key) in Resources">
-                <img :src="Icons[key]"> {{ numFmt(resource, 2) }}
+                <img :src="Icons[key]"> {{ numFmt(resource, 2) }} kg
             </div>
         </div>
 
