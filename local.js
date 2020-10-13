@@ -16,9 +16,9 @@ let Resources = {
 }
 
 let Structures = [ // rate is x per tick
+    { name: "Big Shovel and Stove", desc: "", resource: "Steel", rate: 100 },
     { name: "Methane Farm", desc: "", resource: "Methane", rate: 100 },
     { name: "Glorified Air Compressor", desc: "", resource: "Oxygen", rate: 100 },
-    { name: "Big Shovel and Stove", desc: "", resource: "Steel", rate: 100 }
 ]
 
 document.addEventListener("DOMContentLoaded", () => {
