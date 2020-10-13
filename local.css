@@ -29,7 +29,7 @@ table th {
     color: #FFF;
 }
 
-table tr:hover {
+table td:hover {
     background-color: rgb(129, 74, 74);
 }
 
