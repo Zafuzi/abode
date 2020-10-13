@@ -1,0 +1,1 @@
+*{box-sizing:border-box}body,html{background:#223;color:salmon;font-size:18px;font-family:'Lucida Sans','Lucida Sans Regular','Lucida Grande','Lucida Sans Unicode',Geneva,Verdana,sans-serif}#resources,#structures{display:flex;flex-flow:row wrap}.resource{margin:0 15px;display:flex;flex-flow:row nowrap;align-items:center}

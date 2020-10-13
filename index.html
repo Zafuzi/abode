@@ -1,77 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Abode</title>
-    <link href="styles.css" rel="stylesheet">
+    <title>My Astronautical Space Station Investigating Vaccum Enteprises - A Shitty Simulator (M.A.S.S.I.V.E - A.S.S)</title>
+    <link href="local.min.css" rel="stylesheet">
 </head>
-<body>
-    <header>
-        <div class="balance" id="tpl_balance">
-            <img src="images/wallet.png" class="icon">
-            <p>$__balance__</p>
-        </div>
-        <div class="budget" id="tpl_budget">
-            <div style="text-align: center;">
-                <p style="color: #FFF857;">$__cost__</p>
-                <p style="color: #2EAE2B;">$__budget__</p>
-            </div>
-            <div class="flex_row">
-                <hr id="month"/>
-                <hr id="year"/>
-            </div>
-        </div>
-    </header>
 
-    <main>
-        <div class="page" id="tpl_map" data-page="map">
-            <div class="content">
-                <div class="grid_row card" id="tpl_bodies">
-                    <div class="flex_header">
-                        <div class="flex_row">
-                            <img src="images/__id__.png" class="icon">
-                            <h2>__name__</h2>
-                        </div>
-                        <div class="flex row align_center justify_center">
-                            <!-- Theses will be made using svg's or css to be dynamic -->
-                            <img class="icon_tiny" src="images/probe.png">
-                            <div class="flex row align_center justify_center">
-                                <img class="icon_tiny" src="images/mesh.png">
-                                <p id="tpl_mesh_count">__mesh_count__/10</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel">
-                        <div class="flex col align_center">
-                            <p style="color: #2EAE2B; padding:0; margin:0;">Income: $__prepared_income__/day</p>
-                            <p style="color: #F12626; padding:0; margin:0;">Cost: $__prepared_cost__/month</p>
-                        </div>
-                        <div class="flex row align_center justify_center">
-                            <div class="action" id="tpl___id___actions">
-                                <button>__action_name__ <br/><br/> $__action_cost__</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<body>
+    <h1> My Astronautical Space Station Investigating Vaccum Enteprises - A Shitty Simulator (M.A.S.S.I.V.E - A.S.S) </h1>
+    <div id="app">
+        {{ message }}
+        <div id=resources>
+            <div class=resource :title="key" v-for="(resource, key) in Resources">
+                <img :src="Icons[key]"> {{ numFmt(resource, 2) }}
             </div>
         </div>
-        <div class="page" data-page="research">
-            <div class="content">
-                <h1 style="color: #fff;">Research</h1>
-                <div class="flex_row card" id="tpl_research">
-                    <p>__name__</p>
-                    <p style="text-align: right;">$__comma_cost__</p>
-                </div>
-            </div>
+
+        <div class=structure v-for=" structure in Structures ">
+            <span>{{Icons[structure.name]}}</span> {{ structure.name }}
         </div>
-    </main>
-    <footer>
-        <p class="active" data-page="map">Overview</p>
-        <p data-page="research">Research</p>
-    </footer>
-    <script src="replicate.js"></script>
-    <script defer src="main.js"></script>
+    </div>
+    <script src="sleepless.js "></script>
+    <script src="rplc8.js "></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js "></script>
+    <script defer src="local.js "></script>
 </body>
+
 </html>

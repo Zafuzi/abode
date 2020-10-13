@@ -1,0 +1,23 @@
+{
+  "name": "abode",
+  "version": "1.0.0",
+  "description": "Start by sending 1 probe to planet (including earth, max 1 per body)\r After sending probe you can launch a GPS satellite (max 5 per body)\r Then you can build a mesh network (max 10 per body)",
+  "main": "economia.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zafuzi/abode.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Zafuzi/abode/issues"
+  },
+  "homepage": "https://github.com/Zafuzi/abode#readme",
+  "dependencies": {
+    "rplc8": "^1.1.0",
+    "sleepless": "^2.8.2"
+  }
+}
