@@ -5,12 +5,14 @@ let Icons = {
     Steel: "images/steel.png",
     Oxygen: "images/oxygen.png",
     Methane: "images/methane.png",
-    Rockets: "images/rocket.png"
+    Rockets: "images/rocket.png",
+    Stations: "images/station.png"
 }
 
 let Resources = {
     Credits: 1000000,
-    Rockets: 0
+    Rockets: 0,
+    Stations: 0
 }
 
 let Structures = [ // rate is x per tick
@@ -23,6 +25,17 @@ let Structures = [ // rate is x per tick
         timer: 10,
         current_timer: 0,
         cost: 750000,
+        ready: false
+    },
+    {
+        name: "Orbital Station",
+        desc: "",
+        resource: "Stations",
+        count: 0,
+        auto: false,
+        timer: 25,
+        current_timer: 0,
+        cost: 5000000,
         ready: false
     },
 ]
