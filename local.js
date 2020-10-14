@@ -10,7 +10,7 @@ let Icons = {
 }
 
 let Resources = {
-    Credits: 100000000,
+    Credits: 10000000,
     Rockets: 0,
     Stations: 0,
     Steel: 0,
@@ -20,19 +20,21 @@ let Resources = {
 
 let Prices = {
     Steel: 622,
-    Oxygen: 3,
-    Methane: 1.35,
-    Rockets: 50000000
+    Oxygen: 300,
+    Methane: 135,
+    Rockets: 50000000,
+    Stations: 5000000000
 }
 
-let Structures = [ // rate is x per tick
+let Structures = [ // rate is x per second
     {
         name: "Steel Mine",
         desc: "",
         resource: "Steel",
         count: 0,
         auto: false,
-        timer: 12, // Based on 400,000 tonnes / year
+        rate: 5,
+        timer: 30,
         current_timer: 0,
         cost: 50000000,
         ready: false,
@@ -44,8 +46,9 @@ let Structures = [ // rate is x per tick
         resource: "Oxygen",
         count: 0,
         auto: false,
-        timer: 5,
-        cost: 500000,
+        timer: 15,
+        rate: 25,
+        cost: 5000000,
         ready: false
     },
     {
@@ -54,8 +57,9 @@ let Structures = [ // rate is x per tick
         resource: "Methane",
         count: 0,
         auto: false,
-        timer: 2,
-        cost: 750000,
+        timer: 12,
+        rate: 35,
+        cost: 7500000,
         ready: false
     },
     {
@@ -64,8 +68,9 @@ let Structures = [ // rate is x per tick
         resource: "Rockets",
         count: 0,
         auto: false,
-        timer: 10,
-        cost: 62000000,
+        timer: 120,
+        rate: .001,
+        cost: 120000000,
         ready: false
     },
     {
@@ -74,7 +79,8 @@ let Structures = [ // rate is x per tick
         resource: "Stations",
         count: 0,
         auto: false,
-        timer: 25,
+        timer: 240,
+        rate: .0001,
         cost: 150000000000,
         ready: false
     },
@@ -90,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
             Resources: Resources,
             Structures: Structures,
             Icons: Icons,
+            Prices: Prices,
             Bot: Bot,
             numFmt: numFmt,
             bots: bots,
@@ -99,6 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         methods: {
             create_bot: function() {
+                if (bots.length == 10) return;
                 if (Resources.Credits >= 30000000) {
                     Resources.Credits -= 30000000;
                     bots.push(new Bot(1));
@@ -112,6 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (val == 0) {
                     val = Resources[key] //sell all
                 }
+                val = Math.floor(val);
                 let price = Prices[key];
                 if (Resources[key] >= val) {
                     Resources.Credits += val * price;
@@ -119,10 +128,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             },
             construct: function(structure, amt) {
+                if (tasks.holding.length == 20) return;
                 if (structure.cost <= Resources.Credits) {
-                    Resources.Credits -= structure.cost;
+
                     let t = new Task(structure.name, () => { structure.count += amt }, structure.timer);
                     tasks.add(t);
+
+                    Resources.Credits -= structure.cost;
                 }
             }
         }
@@ -144,20 +156,22 @@ document.addEventListener("DOMContentLoaded", () => {
     let loop = function() {
         T += 1;
 
-        Structures.forEach(s => {
-            if (s.auto) {
-                app.construct(s, 1);
-            }
-            Resources[s.resource] += s.count;
-        })
-
         bots.forEach(bot => {
             bot.tick();
         })
 
-        app.autosell_resources.forEach(r => {
-            app.sell(r);
-        })
+        if (T % FPS == 0) {
+            app.autosell_resources.forEach(r => {
+                app.sell(r);
+            })
+
+            Structures.forEach(s => {
+                if (s.auto) {
+                    app.construct(s, 1);
+                }
+                Resources[s.resource] += s.count * s.rate * FPS;
+            })
+        }
 
         requestAnimationFrame(FPS_LOCK);
     }
