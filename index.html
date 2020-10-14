@@ -11,6 +11,7 @@
 
 <body>
     <div id="app">
+
         <table id=resources>
             <caption>Resources</caption>
             <thead>
@@ -24,6 +25,13 @@
                 <tr>
                     <td class=resource :title="key" v-for="(resource, key) in Resources">
                         {{ numFmt(resource, 2) }}
+                        <br />
+                        <input type=number v-if="key != 'Credits' " :name="key" :placeholder="resource" min=0 :max="numFmt(resource, 2)" :max="numFmt(resource, 2)">
+                        <input type=button v-if="key != 'Credits' " value="Sell" @click="sell(key)">
+                        <label v-if="key != 'Credits' ">
+                            <input type=checkbox @change="autosell(key)">
+                            Auto Sell
+                        </label>
                     </td>
                 </tr>
             </tbody>
@@ -36,28 +44,35 @@
                     <th> Name </th>
                     <th> Count </th>
                     <th> Buy </th>
-                    <th> Production Rate </th>
                     <th> Automatic </th>
                 </tr>
             </thead>
             <tbody>
-                <tr class="structure" v-for=" structure in Structures ">
+                <tr class=" structure " v-for=" structure in Structures ">
                     <td>{{ structure.name }}</td>
                     <td>{{ structure.count }}</td>
                     <td>
-                        <button @click="construct(structure, 1)" :disabled="structure.cost * 1 >= Resources.Credits">Launch</button>
+                        <button @click="construct(structure, 1)" :disabled="structure.cost > Resources.Credits">Launch</button>
                         <span> Cost: {{ numFmt(structure.cost, 2) }}</span>
                     </td>
-                    <td><span class=progress :style="{ width: structure.current_timer*10 + '%' }"></span></td>
                     <td><input type=checkbox v-model="structure.auto"></td>
                 </tr>
             </tbody>
         </table>
-
-        <canvas id="c"></canvas>
+        <div id="bots">
+            <h3>Bots</h3>
+            <button @click="create_bot()" :disabled="30000000 > Resources.Credits">Add a Bot ({{numFmt(30000000, 0)}})</button>
+            <p v-for="bot in bots">{{bot}}</p>
+        </div>
+        <br />
+        <div id="queue">
+            <h3>Task Queue</h3>
+            <p v-for="task in tasks">{{ task.name }}</p>
+        </div>
     </div>
-    <script src="sleepless.js "></script>
-    <script src="rplc8.js "></script>
+    <script src="./sleepless.js "></script>
+    <script src="./rplc8.js "></script>
+    <script src=bot.js></script>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js "></script>
     <script defer src="local.js "></script>
 </body>

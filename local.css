@@ -22,6 +22,10 @@ table {
     margin: 15px auto;
 }
 
+table input {
+    max-width: 100px;
+}
+
 table td,
 table th {
     border: 1px solid salmon;
@@ -61,6 +65,31 @@ caption {
     background: green;
     display: block;
     height: 24px;
+}
+
+h3 {
+    width: 100%;
+}
+
+#queue {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+}
+
+#bots {
+    display: flex;
+    flex-flow: column;
+}
+
+#bots button {
+    margin: 10px 0;
+    align-self: flex-start;
+}
+
+#queue p,
+#bots p {
+    margin: 0 10px;
 }
 
 .hid {
