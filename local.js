@@ -199,11 +199,7 @@ class Factory {
                     connection.px = p.x;
                     connection.py = p.y;
                 }
-
-                var grd = ctx.createLinearGradient(o.x, o.y, p.x, p.y);
-                grd.addColorStop(0, node_colors[o.name]);
-                grd.addColorStop(1, node_colors[p.name]);
-                connection.strokeStyle = grd;
+                connection.strokeStyle = node_colors[o.name];
                 self.connections.push(connection);
             }
             dy += 25;
@@ -360,10 +356,30 @@ let loop = function() {
 
 requestAnimationFrame(FPS_LOCK);
 
+addEventListener("contextmenu", e => {
+    e.preventDefault();
+})
+
 addEventListener("mousedown", e => {
-    mousedown = true;
-    mouse_click.x = e.pageX;
-    mouse_click.y = e.pageY
+    let btn = e.button;
+    e.preventDefault();
+    switch (btn) {
+        case 0: // left button
+            mousedown = true;
+            mouse_click.x = e.pageX;
+            mouse_click.y = e.pageY
+            break;
+        case 1: // right button
+            break;
+        case 2: // middle mouse click
+            break;
+        default: // default to left button
+            mousedown = true;
+            mouse_click.x = e.pageX;
+            mouse_click.y = e.pageY
+            break;
+    }
+
 })
 
 addEventListener("mouseup", e => {
