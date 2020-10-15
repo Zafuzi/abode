@@ -143,7 +143,11 @@ class Factory {
                                     r: 10
                                 })) {
                                 if (k == p.name) {
+                                    if (m.connected) {
+                                        m.connected.connected = null;
+                                    }
                                     o.connected = m;
+                                    m.connected = o;
                                 }
                             }
                         });
@@ -221,6 +225,9 @@ GrassField.init();
 
 let MethaneMine = new Factory("Farting Cows", 400, 450, { grass: {}, water: {} }, { methane: {} }, "#333");
 MethaneMine.init();
+
+let MethaneMine2 = new Factory("Farting Cows 2", 400, 600, { grass: {}, water: {} }, { methane: {} }, "#333");
+MethaneMine2.init();
 
 let SteelMine = new Factory("Steel Mine", 800, 250, { oxygen: {}, methane: {} }, { steel: {} }, "#333");
 SteelMine.init();
