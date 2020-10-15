@@ -92,7 +92,8 @@ class Factory {
         this.node_radius = 5;
 
         let tallest = Object.keys(type.inputs).length > Object.keys(type.outputs).length ? Object.keys(type.inputs).length : Object.keys(type.outputs).length;
-        this.h = (font_size + 25) * tallest + font_size;
+        console.log(tallest)
+        this.h = 45 + 9 + 3 + (tallest * (this.node_radius * 2 + 5));
 
         let name_width = ctx.measureText(this.name).width;
         this.w += name_width;
