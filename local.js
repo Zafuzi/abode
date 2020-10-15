@@ -1,4 +1,6 @@
 let mousedown = false;
+let rightmousedown = false;
+let middlemousedown = false;
 let mx = 0,
     my = 0;
 
@@ -363,15 +365,17 @@ addEventListener("contextmenu", e => {
 addEventListener("mousedown", e => {
     let btn = e.button;
     e.preventDefault();
+    mouse_click.x = e.pageX;
+    mouse_click.y = e.pageY
     switch (btn) {
         case 0: // left button
             mousedown = true;
-            mouse_click.x = e.pageX;
-            mouse_click.y = e.pageY
             break;
-        case 1: // right button
+        case 1: // middle button
+            middlemousedown = true;
             break;
-        case 2: // middle mouse click
+        case 2: // right mouse click
+            rightmousedown = true;
             break;
         default: // default to left button
             mousedown = true;
@@ -383,8 +387,26 @@ addEventListener("mousedown", e => {
 })
 
 addEventListener("mouseup", e => {
+
+    let btn = e.button;
+    e.preventDefault();
+
     mousedown = false;
     dragging = false;
+    switch (btn) {
+        case 0: // left button
+            mousedown = false;
+            break;
+        case 1: // middle button
+            middlemousedown = false;
+            break;
+        case 2: // right mouse click
+            rightmousedown = false;
+            break;
+        default: // default to left button
+            mousedown = false;
+            break;
+    }
 })
 
 addEventListener("mousemove", e => {
