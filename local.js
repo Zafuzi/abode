@@ -113,7 +113,7 @@ let loop = function() {
                     if (hit_rad({
                             x: o.x,
                             y: o.y,
-                            r: 10
+                            r: o.r
                         })) {
                         let p = {
                             remove_on_mouse_up: true,

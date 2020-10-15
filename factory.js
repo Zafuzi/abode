@@ -89,6 +89,7 @@ class Factory {
         this.x = x;
         this.y = y;
         this.w = 100;
+        this.node_radius = 5;
 
         let tallest = Object.keys(type.inputs).length > Object.keys(type.outputs).length ? Object.keys(type.inputs).length : Object.keys(type.outputs).length;
         this.h = (font_size + 25) * tallest + font_size;
@@ -123,35 +124,37 @@ class Factory {
             o.y = dy;
             o.name = k;
             o.parent = self;
+            o.r = self.node_radius;
             ctx.beginPath();
             ctx.fillStyle = node_colors[o.name];
-            ctx.arc(o.x, o.y, 10, 0, 2 * Math.PI);
+            ctx.arc(o.x, o.y, self.node_radius, 0, 2 * Math.PI);
             ctx.fill();
             ctx.closePath();
             ctx.beginPath();
             ctx.fillText(o.name, o.x + font_size, o.y + 5);
             ctx.closePath();
-            dy += 25;
+            dy += self.node_radius * 2 + 5;
         });
 
         dx = self.x + self.w;
-        dy = self.y + 20 + 3;
+        dy = self.y + self.node_radius * 2 + 3;
         Object.keys(self.outputs).forEach(k => {
             let o = self.outputs[k];
             o.x = dx;
             o.y = dy;
             o.name = k;
             o.parent = self;
+            o.r = self.node_radius;
 
             ctx.beginPath();
             ctx.fillStyle = node_colors[o.name];
-            ctx.arc(o.x, o.y, 10, 0, 2 * Math.PI);
+            ctx.arc(o.x, o.y, self.node_radius, 0, 2 * Math.PI);
             ctx.fill();
             ctx.closePath();
             ctx.beginPath();
-            ctx.fillText(o.name, o.x - ctx.measureText(o.name).width - font_size, o.y + 5);
+            ctx.fillText(o.name, o.x - ctx.measureText(o.name).width - self.node_radius * 2, o.y + self.node_radius / 2);
             ctx.closePath();
-            dy += 25;
+            dy += self.node_radius * 2 + 5;
         });
 
         ctx.beginPath();
@@ -162,13 +165,14 @@ class Factory {
     calc_connections() {
         let self = this;
         let dx = self.x + self.w;
-        let dy = self.y + 20 + 3;
+        let dy = self.y + self.node_radius * 2 + 3;
         Object.keys(self.outputs).forEach(k => {
             let o = self.outputs[k];
             o.x = dx;
             o.y = dy;
             o.name = k;
             o.parent = self;
+            o.r = self.node_radius;
 
             if (o.connected) {
 
@@ -182,7 +186,7 @@ class Factory {
                             if (hit_rad({
                                     x: m.x,
                                     y: m.y,
-                                    r: 10
+                                    r: self.node_radius
                                 })) {
                                 if (k == p.name) {
                                     if (m.connected) {
@@ -243,7 +247,7 @@ class Factory {
                 connection.strokeStyle = node_colors[o.name];
                 self.connections.push(connection);
             }
-            dy += 25;
+            dy += self.node_radius * 2 + 5;
         });
     }
 }
