@@ -22,7 +22,8 @@ let node_colors = {
     methane: "#a6fffe",
     water: "#a6caff",
     steel: "#d3d7de",
-    grass: "#a6ffaf"
+    grass: "#a6ffaf",
+    mouse: "red"
 }
 
 let connections = [];
@@ -135,7 +136,24 @@ class Factory {
                 o.connected = [];
             }
             if (o.connected.length > 0) {
-                o.connected.forEach(p => {
+                o.connected.forEach((p, i) => {
+                    if (p.remove_on_mouse_up && !mousedown) {
+                        o.connected.splice(i, 1);
+                        // check all the other factories for a place to connect to
+                        factories.forEach(f => {
+                            Object.keys(f.inputs).forEach(k => {
+                                let m = f.inputs[k];
+                                if (hit_rad({
+                                        x: m.x + f.x,
+                                        y: m.y + f.y,
+                                        r: 10
+                                    })) {
+                                    o.connected.push(m);
+                                }
+                            });
+                        })
+                        return;
+                    }
                     let connection = {};
                     let left = self.x + o.x > p.x + p.parent.x ? p : o;
 
@@ -208,11 +226,13 @@ MethaneMine.init();
 let SteelMine = new Factory("Steel Mine", 800, 250, { oxygen: {}, methane: {} }, { steel: {} }, "#333");
 SteelMine.init();
 
+/*
 SolarPanel.outputs.power.connected.push(OxygenMine.inputs.power);
 OxygenMine.outputs.oxygen.connected.push(SteelMine.inputs.oxygen);
 RainCollector.outputs.water.connected.push(OxygenMine.inputs.water, MethaneMine.inputs.water);
 GrassField.outputs.grass.connected.push(MethaneMine.inputs.grass);
 MethaneMine.outputs.methane.connected.push(SteelMine.inputs.methane);
+*/
 
 let then = performance.now();
 let FPS = 120;
@@ -239,6 +259,16 @@ let hit = function(f = Factory) {
     if (my < y) { return false; }
     if (my > y + f.h) { return false; }
     return true;
+}
+
+// Radius to radius collision test
+let hit_rad = function(o) {
+    let mouse_radius = 10;
+    let rHit = (mouse_radius * o.r) + (o.r * o.r);
+    let xx = Math.abs(o.x - mx);
+    let yy = Math.abs(o.y - my);
+    let rDist = (xx * xx) + (yy * yy);
+    return rDist < rHit;
 }
 
 let dragging;
@@ -273,12 +303,15 @@ let loop = function() {
         ctx.drawImage(f.canvas, f.x, f.y);
     })
 
-
-
     if (mousedown) {
         if (dragging) {
-            dragging.f.x = Math.round((mx - dragging.diffx) / grid_size) * grid_size;
-            dragging.f.y = Math.round((my - dragging.diffy) / grid_size) * grid_size;
+            if (dragging.name) {
+                dragging.x = mx;
+                dragging.y = my;
+            } else {
+                dragging.f.x = Math.round((mx - dragging.diffx) / grid_size) * grid_size;
+                dragging.f.y = Math.round((my - dragging.diffy) / grid_size) * grid_size;
+            }
         } else {
             for (let i = 0; i < factories.length; i++) {
                 let f = factories[i];
@@ -289,6 +322,29 @@ let loop = function() {
                         diffy: (my - f.y)
                     }
                 }
+                Object.keys(f.outputs).forEach(k => {
+                    let o = f.outputs[k];
+
+                    if (hit_rad({
+                            x: o.x + f.x,
+                            y: o.y + f.y,
+                            r: 10
+                        })) {
+                        let p = {
+                            remove_on_mouse_up: true,
+                            name: o.name,
+                            x: mx - o.x,
+                            y: my - o.y,
+                            parent: {
+                                name: "mouse",
+                                x: 0,
+                                y: 0
+                            }
+                        }
+                        f.outputs[k].connected.push(p);
+                        dragging = p
+                    }
+                });
             }
         }
     }
