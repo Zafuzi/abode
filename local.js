@@ -44,7 +44,7 @@ class Factory {
 
         this.canvas = document.createElement('canvas');
         this.canvas.width = this.w + 35;
-        this.canvas.height = this.h;
+        this.canvas.height = this.h + 3;
         this.ctx = this.canvas.getContext("2d");
         this.ctx.font = "18px sans-serif";
         this.ctx.imageSmoothingEnabled = true;
@@ -53,7 +53,7 @@ class Factory {
 
         let self = this;
         let dx = 15;
-        let dy = 45 + 9;
+        let dy = 45 + 9 + 3;
 
         self.ctx.clearRect(0, 0, self.canvas.w, self.canvas.h);
 
@@ -61,6 +61,9 @@ class Factory {
         self.ctx.beginPath();
         self.ctx.fillStyle = "#333";
         self.ctx.fillRect(dx, 0, self.w, self.h);
+        self.ctx.strokeStyle = "#ddd";
+        self.ctx.lineWidth = 2;
+        self.ctx.strokeRect(dx, 0, self.w, self.h);
         self.ctx.closePath();
 
         Object.keys(self.inputs).forEach(k => {
@@ -82,7 +85,7 @@ class Factory {
         });
 
         dx = 15 + self.w;
-        dy = 20;
+        dy = 20 + 3;
         Object.keys(self.outputs).forEach(k => {
             console.log(self.name, " | output:", k);
             let o = self.outputs[k];
@@ -120,7 +123,7 @@ class Factory {
     calc_connections() {
         let self = this;
         let dx = 15 + self.w;
-        let dy = 20;
+        let dy = 20 + 3;
         Object.keys(self.outputs).forEach(k => {
             let o = self.outputs[k];
             o.x = dx;
@@ -262,60 +265,31 @@ let loop = function() {
             ctx.stroke();
             ctx.closePath();
         });
-        ctx.drawImage(f.canvas, f.x, f.y);
     });
+
+    factories.forEach(f => {
+        ctx.drawImage(f.canvas, f.x, f.y);
+    })
 
 
 
     if (mousedown) {
         if (dragging) {
-            dragging.x = mx - dragging.w / 2;
-            dragging.y = my - dragging.h / 2;
+            dragging.f.x = mx - dragging.diffx;
+            dragging.f.y = my - dragging.diffy;
         } else {
             for (let i = 0; i < factories.length; i++) {
                 let f = factories[i];
                 if (hit(f)) {
-                    dragging = f;
+                    dragging = {
+                        f: f,
+                        diffx: (mx - f.x),
+                        diffy: (my - f.y)
+                    }
                 }
             }
         }
     }
-
-    /*
-    ctx.fillStyle = "#333";
-    factories.forEach(factory => {
-
-        // draw the factory box
-        ctx.fillRect(factory.x, factory.y, factory.w, factory.h);
-        Object.keys(factory.inputs).forEach(k => {
-            inputs.push(factory.inputs[k]);
-        })
-
-        Object.keys(factory.outputs).forEach(k => {
-            inputs.push(factory.outputs[k]);
-        })
-
-    });
-
-    ctx.lineWidth = 2;
-    ctx.fillStyle = "#fff";
-    factories.forEach(factory => {
-        ctx.fillText(factory.name, factory.x + 9, factory.y + 18 + 9);
-    })
-
-    ctx.lineWidth = 2;
-    inputs.forEach(input => {
-        // draw the circles for inputs
-        ctx.beginPath();
-        ctx.fillStyle = node_colors[input.name];
-        ctx.arc(input.x, input.y, 10, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.closePath();
-        ctx.beginPath();
-        ctx.fillText(input.name, input.type == "input" ? input.x + 18 : input.x - ctx.measureText(input.name).width - 18, input.y + 5);
-        ctx.closePath();
-    });
-    */
 
     requestAnimationFrame(FPS_LOCK);
 }
