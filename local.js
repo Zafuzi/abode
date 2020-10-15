@@ -244,6 +244,8 @@ let hit = function(f = Factory) {
 let dragging;
 ctx.imageSmoothingEnabled = true;
 
+let grid_size = 50;
+
 let loop = function() {
     t++;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -275,8 +277,8 @@ let loop = function() {
 
     if (mousedown) {
         if (dragging) {
-            dragging.f.x = mx - dragging.diffx;
-            dragging.f.y = my - dragging.diffy;
+            dragging.f.x = Math.round((mx - dragging.diffx) / grid_size) * grid_size;
+            dragging.f.y = Math.round((my - dragging.diffy) / grid_size) * grid_size;
         } else {
             for (let i = 0; i < factories.length; i++) {
                 let f = factories[i];
