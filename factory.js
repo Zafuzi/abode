@@ -1,0 +1,249 @@
+let node_colors = {
+    power: "#fff3a6",
+    oxygen: "#ffa6a6",
+    hydrogen: "#fff",
+    methane: "#a6fffe",
+    water: "#a6caff",
+    steel: "#999",
+    grass: "#a6ffaf",
+    carbon: "#58637a",
+    slag: "#c9bbab",
+    iron: "#ba7254",
+    rocket: "#ff99e6",
+    silicates: "#b6c9a5"
+}
+
+let FactoryTypes = {
+    solar: {
+        name: "Solar Panels",
+        inputs: {},
+        outputs: {
+            power: {}
+        }
+    },
+    water: {
+        name: "Big Lake of Fresh Water",
+        inputs: {},
+        outputs: {
+            water: {}
+        }
+    },
+    oxygen: {
+        name: "Oxygen Electrolysis Chamber",
+        inputs: {
+            power: {},
+            water: {}
+        },
+        outputs: {
+            hydrogen: {},
+            oxygen: {}
+        }
+    },
+    carbon: {
+        name: "Carbon Mine",
+        inputs: {},
+        outputs: {
+            carbon: {}
+        }
+    },
+    iron: {
+        name: "Iron Mine",
+        inputs: {},
+        outputs: {
+            iron: {},
+            silicates: {}
+        }
+    },
+    steel: {
+        name: "Steel Production Facility",
+        inputs: {
+            iron: {},
+            carbon: {},
+            oxygen: {}
+        },
+        outputs: {
+            steel: {},
+            slag: {}
+        }
+    },
+    rocket: {
+        name: "Rocket Fabricator",
+        inputs: {
+            steel: {},
+            methane: {},
+            oxygen: {},
+            power: {}
+        },
+        outputs: {
+            rocket: {}
+        }
+    }
+}
+
+// Factory Definition
+class Factory {
+    constructor(type, x, y) {
+        this.name = type.name;
+        this.inputs = type.inputs;
+        this.outputs = type.outputs;
+        this.x = x;
+        this.y = y;
+        this.w = 100;
+
+        let tallest = Object.keys(type.inputs).length > Object.keys(type.outputs).length ? Object.keys(type.inputs).length : Object.keys(type.outputs).length;
+        this.h = (font_size + 25) * tallest + font_size;
+
+        let name_width = ctx.measureText(this.name).width;
+        this.w += name_width;
+
+        factories.push(this);
+    }
+    update() {
+        this.connections = [];
+        this.calc_connections();
+    }
+    draw() {
+        let self = this;
+        let dx = self.x;
+        let dy = self.y;
+
+        // draw the factory box
+        ctx.beginPath();
+        ctx.fillStyle = "#223333";
+        ctx.fillRect(dx, dy, self.w, self.h);
+        ctx.strokeStyle = "#444";
+        ctx.strokeRect(dx, dy, self.w, self.h);
+        ctx.closePath();
+
+        dx = self.x;
+        dy = self.y + 45 + 9 + 3;
+        Object.keys(self.inputs).forEach(k => {
+            let o = self.inputs[k];
+            o.x = dx;
+            o.y = dy;
+            o.name = k;
+            o.parent = self;
+            ctx.beginPath();
+            ctx.fillStyle = node_colors[o.name];
+            ctx.arc(o.x, o.y, 10, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.closePath();
+            ctx.beginPath();
+            ctx.fillText(o.name, o.x + font_size, o.y + 5);
+            ctx.closePath();
+            dy += 25;
+        });
+
+        dx = self.x + self.w;
+        dy = self.y + 20 + 3;
+        Object.keys(self.outputs).forEach(k => {
+            let o = self.outputs[k];
+            o.x = dx;
+            o.y = dy;
+            o.name = k;
+            o.parent = self;
+
+            ctx.beginPath();
+            ctx.fillStyle = node_colors[o.name];
+            ctx.arc(o.x, o.y, 10, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.closePath();
+            ctx.beginPath();
+            ctx.fillText(o.name, o.x - ctx.measureText(o.name).width - font_size, o.y + 5);
+            ctx.closePath();
+            dy += 25;
+        });
+
+        ctx.beginPath();
+        ctx.fillStyle = "#fff";
+        ctx.fillText(self.name, self.x + 9, self.y + font_size + 9);
+        ctx.closePath();
+    }
+    calc_connections() {
+        let self = this;
+        let dx = self.x + self.w;
+        let dy = self.y + 20 + 3;
+        Object.keys(self.outputs).forEach(k => {
+            let o = self.outputs[k];
+            o.x = dx;
+            o.y = dy;
+            o.name = k;
+            o.parent = self;
+
+            if (o.connected) {
+
+                let p = o.connected;
+                if (p.remove_on_mouse_up && !mousedown) {
+                    o.connected = null;
+                    // check all the other factories for a place to connect to
+                    factories.forEach(f => {
+                        Object.keys(f.inputs).forEach(k => {
+                            let m = f.inputs[k];
+                            if (hit_rad({
+                                    x: m.x,
+                                    y: m.y,
+                                    r: 10
+                                })) {
+                                if (k == p.name) {
+                                    if (m.connected) {
+                                        m.connected.connected = null;
+                                    }
+                                    o.connected = m;
+                                    m.connected = o;
+                                }
+                            }
+                        });
+                    })
+                    return;
+                }
+
+                if (!p.parent) {
+                    return;
+                }
+
+                let connection = {};
+                let left = o.x > p.x ? p : o;
+
+                connection.remote_node = p;
+                connection.parent = self;
+
+                let middle = (o.x + p.x) / 2;
+
+                if (o == left) {
+                    let cp1 = {
+                        x: middle,
+                        y: o.y
+                    }
+                    let cp2 = {
+                        x: middle,
+                        y: p.y
+                    }
+                    connection.x = o.x;
+                    connection.y = o.y;
+                    connection.cp1 = cp1;
+                    connection.cp2 = cp2;
+                    connection.px = p.x;
+                    connection.py = p.y;
+                } else {
+                    let cp1 = {
+                        x: middle,
+                        y: p.y
+                    }
+                    let cp2 = {
+                        x: middle,
+                        y: o.y
+                    }
+                    connection.x = o.x;
+                    connection.y = o.y;
+                    connection.cp1 = cp1;
+                    connection.cp2 = cp2;
+                    connection.px = p.x;
+                    connection.py = p.y;
+                }
+                connection.strokeStyle = node_colors[o.name];
+                self.connections.push(connection);
+            }
+            dy += 25;
+        });
+    }
+}
