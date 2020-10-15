@@ -280,7 +280,7 @@ let hit_rad = function(o) {
 let dragging;
 ctx.imageSmoothingEnabled = true;
 
-let grid_size = 50;
+let grid_size = 2;
 
 let loop = function() {
     t++;
