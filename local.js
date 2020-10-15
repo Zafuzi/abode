@@ -103,10 +103,6 @@ class Factory {
             self.ctx.beginPath();
             self.ctx.fillText(o.name, o.x - self.ctx.measureText(o.name).width - 18, o.y + 5);
             self.ctx.closePath();
-
-            if (!o.connected) {
-                o.connected = [];
-            }
             dy += 25;
         });
 
@@ -132,76 +128,79 @@ class Factory {
             o.name = k;
             o.parent = self;
 
-            if (!o.connected) {
-                o.connected = [];
-            }
-            if (o.connected.length > 0) {
-                o.connected.forEach((p, i) => {
-                    if (p.remove_on_mouse_up && !mousedown) {
-                        o.connected.splice(i, 1);
-                        // check all the other factories for a place to connect to
-                        factories.forEach(f => {
-                            Object.keys(f.inputs).forEach(k => {
-                                let m = f.inputs[k];
-                                if (hit_rad({
-                                        x: m.x + f.x,
-                                        y: m.y + f.y,
-                                        r: 10
-                                    })) {
-                                    o.connected.push(m);
+            if (o.connected) {
+
+                let p = o.connected;
+                if (p.remove_on_mouse_up && !mousedown) {
+                    o.connected = null;
+                    // check all the other factories for a place to connect to
+                    factories.forEach(f => {
+                        Object.keys(f.inputs).forEach(k => {
+                            let m = f.inputs[k];
+                            if (hit_rad({
+                                    x: m.x + f.x,
+                                    y: m.y + f.y,
+                                    r: 10
+                                })) {
+                                if (k == p.name) {
+                                    o.connected = m;
                                 }
-                            });
-                        })
-                        return;
+                            }
+                        });
+                    })
+                    return;
+                }
+
+                if (!p.parent) {
+                    return;
+                }
+
+                let connection = {};
+                let left = self.x + o.x > p.x + p.parent.x ? p : o;
+
+                connection.remote_node = p;
+                connection.parent = self;
+
+                let middle = (self.x + o.x + p.parent.x + p.x) / 2;
+
+                if (o == left) {
+                    let cp1 = {
+                        // ((c.parent.x + c.x) + (c.remote_node.parent.x + c.px)) / 2, ((c.parent.y + c.y)),
+                        x: middle,
+                        y: o.y + self.y
                     }
-                    let connection = {};
-                    let left = self.x + o.x > p.x + p.parent.x ? p : o;
-
-                    connection.remote_node = p;
-                    connection.parent = self;
-
-                    let middle = (self.x + o.x + p.parent.x + p.x) / 2;
-
-                    if (o == left) {
-                        let cp1 = {
-                            // ((c.parent.x + c.x) + (c.remote_node.parent.x + c.px)) / 2, ((c.parent.y + c.y)),
-                            x: middle,
-                            y: o.y + self.y
-                        }
-                        let cp2 = {
-                            x: middle,
-                            y: p.parent.y + p.y
-                        }
-                        connection.x = o.x;
-                        connection.y = o.y;
-                        connection.cp1 = cp1;
-                        connection.cp2 = cp2;
-                        connection.px = p.x;
-                        connection.py = p.y;
-                    } else {
-                        let cp1 = {
-                            x: middle,
-                            y: p.parent.y + p.y
-                        }
-                        let cp2 = {
-                            x: middle,
-                            y: self.y + o.y
-                        }
-                        connection.x = o.x;
-                        connection.y = o.y;
-                        connection.cp1 = cp1;
-                        connection.cp2 = cp2;
-                        connection.px = p.x;
-                        connection.py = p.y;
+                    let cp2 = {
+                        x: middle,
+                        y: p.parent.y + p.y
                     }
+                    connection.x = o.x;
+                    connection.y = o.y;
+                    connection.cp1 = cp1;
+                    connection.cp2 = cp2;
+                    connection.px = p.x;
+                    connection.py = p.y;
+                } else {
+                    let cp1 = {
+                        x: middle,
+                        y: p.parent.y + p.y
+                    }
+                    let cp2 = {
+                        x: middle,
+                        y: self.y + o.y
+                    }
+                    connection.x = o.x;
+                    connection.y = o.y;
+                    connection.cp1 = cp1;
+                    connection.cp2 = cp2;
+                    connection.px = p.x;
+                    connection.py = p.y;
+                }
 
-                    var grd = ctx.createLinearGradient(o.x, o.y, p.x, p.y);
-                    grd.addColorStop(0, node_colors[o.name]);
-                    grd.addColorStop(1, node_colors[p.name]);
-                    connection.strokeStyle = grd;
-                    self.connections.push(connection);
-
-                })
+                var grd = ctx.createLinearGradient(o.x, o.y, p.x, p.y);
+                grd.addColorStop(0, node_colors[o.name]);
+                grd.addColorStop(1, node_colors[p.name]);
+                connection.strokeStyle = grd;
+                self.connections.push(connection);
             }
             dy += 25;
         });
@@ -341,7 +340,7 @@ let loop = function() {
                                 y: 0
                             }
                         }
-                        f.outputs[k].connected.push(p);
+                        f.outputs[k].connected = p;
                         dragging = p
                     }
                 });
