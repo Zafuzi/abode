@@ -36,6 +36,7 @@ class Tasks {
         this.holding = [];
     }
     add(t = Task) {
+        if (this.holding.length == 20) return;
         this.holding.push(t);
     }
     remove(t) {
@@ -87,7 +88,6 @@ class Bot {
 
 var bots = [];
 bots.push(new Bot(1)); // normal bot = 1/s
-bots.push(new Bot(1)); // fast bot = 1/s
 
 //tasks.add(new Task("Make Steel", () => { Resources.Steel += 100 }, 12));
 //tasks.add(new Task("Make Oxygen", () => { Resources.Oxygen += 1000 }, 5));
