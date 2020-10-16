@@ -4,6 +4,9 @@ let middlemousedown = false;
 let mx = 0,
     my = 0;
 
+let static_mx = 0,
+    static_my = 0;
+
 let mouse_click = {
     x: 0,
     y: 0
@@ -37,6 +40,7 @@ let font_size = 18;
 let then = performance.now();
 let FPS = 120;
 let t = 0;
+let scale = 1;
 
 let dragging;
 
@@ -60,11 +64,9 @@ let loop = function() {
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.restore();
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = "#1e1e1e";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
 
     factories.forEach(f => {
         f.update();
@@ -132,7 +134,138 @@ let loop = function() {
         }
     }
 
+
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // draw the menu
+    if (rightmousedown) {
+        ctx.fillStyle = "#5e5e5e";
+        context_wheel.forEach((c, i) => {
+            c.update();
+            if (hit_poly(c.shape)) {
+                c.hovering = true;
+            } else {
+                c.hovering = false;
+            }
+            c.draw();
+        })
+        ctx.beginPath();
+        ctx.moveTo(static_mx, static_my);
+        //ctx.arc(static_mx, static_my, wheel_inner_radius, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.closePath();
+    }
+    ctx.restore();
+
     requestAnimationFrame(FPS_LOCK);
+}
+
+function d2r(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
+let wheel_radius = 75;
+let wheel_inner_radius = 25;
+let context_wheel = [];
+
+//context_wheel.push({ name: "add" });
+let d = 60;
+for (let i = 0; i < 360 / d; i++) {
+    context_wheel.push({
+        name: "add",
+        deg: d,
+        hovering: false,
+        clicked: false,
+        shape: [],
+        update: function() {
+            let self = this;
+            let padding = (self.deg / 2);
+            let deg = i * self.deg;
+            self.shape = [
+                [
+                    static_mx + Math.cos(d2r(deg - padding)) * wheel_inner_radius,
+                    static_my + Math.sin(d2r(deg - padding)) * wheel_inner_radius
+                ],
+                [
+                    static_mx + Math.cos(d2r(deg - padding)) * (wheel_radius + 10),
+                    static_my + Math.sin(d2r(deg - padding)) * (wheel_radius + 10)
+                ],
+                [
+                    static_mx + Math.cos(d2r(deg + padding)) * (wheel_radius + 10),
+                    static_my + Math.sin(d2r(deg + padding)) * (wheel_radius + 10)
+                ],
+                [
+                    static_mx + Math.cos(d2r(deg + padding)) * wheel_inner_radius,
+                    static_my + Math.sin(d2r(deg + padding)) * wheel_inner_radius
+                ],
+                [
+                    static_mx + Math.cos(d2r(deg - padding)) * wheel_inner_radius,
+                    static_my + Math.sin(d2r(deg - padding)) * wheel_inner_radius
+                ]
+            ]
+        },
+        draw: function() {
+            let self = this;
+            let padding = (self.deg / 2);
+            let deg = i * self.deg;
+            if (self.hovering) {
+                ctx.strokeStyle = "#fff";
+            } else {
+                ctx.strokeStyle = "#5e5e5e";
+            }
+            ctx.beginPath();
+            ctx.moveTo(
+                static_mx + Math.cos(d2r(deg - padding)) * wheel_inner_radius,
+                static_my + Math.sin(d2r(deg - padding)) * wheel_inner_radius
+            );
+            ctx.lineTo(
+                static_mx + Math.cos(d2r(deg - padding)) * wheel_radius,
+                static_my + Math.sin(d2r(deg - padding)) * wheel_radius
+            );
+            ctx.arc(
+                static_mx + Math.cos(d2r(deg + padding)),
+                static_my + Math.sin(d2r(deg + padding)),
+                wheel_radius,
+                d2r(deg - padding),
+                d2r(deg + padding),
+                false
+            );
+            ctx.lineTo(
+                static_mx + Math.cos(d2r(deg + padding)) * wheel_inner_radius,
+                static_my + Math.sin(d2r(deg + padding)) * wheel_inner_radius
+            );
+            ctx.lineTo(
+                static_mx + Math.cos(d2r(deg - padding)) * wheel_inner_radius,
+                static_my + Math.sin(d2r(deg - padding)) * wheel_inner_radius
+            );
+            ctx.stroke();
+            ctx.closePath();
+        }
+    });
+}
+console.log(context_wheel)
+
+context_wheel.forEach(c => {
+    c.x = 0;
+    c.y = 0;
+})
+
+function hit_poly(poly_array) {
+    var inside = false;
+    var test_x = mx;
+    var test_y = my;
+    for (var i = 0; i < (poly_array.length - 1); i++) {
+        var p1_x = poly_array[i][0];
+        var p1_y = poly_array[i][1];
+        var p2_x = poly_array[i + 1][0];
+        var p2_y = poly_array[i + 1][1];
+        if ((p1_y < test_y && p2_y >= test_y) || (p2_y < test_y && p1_y >= test_y)) { // this edge is crossing the horizontal ray of testpoint
+            if ((p1_x + (test_y - p1_y) / (p2_y - p1_y) * (p2_x - p1_x)) < test_x) { // checking special cases (holes, self-crossings, self-overlapping, horizontal edges, etc.)
+                inside = !inside;
+            }
+        }
+    }
+    return inside;
 }
 
 let FPS_LOCK = function() {
@@ -175,6 +308,8 @@ addEventListener("mousedown", e => {
             break;
         case 2: // right mouse click
             rightmousedown = true;
+            static_mx = e.clientX;
+            static_my = e.clientY;
             break;
         default: // default to left button
             mousedown = true;
@@ -202,6 +337,8 @@ addEventListener("mouseup", e => {
             break;
         case 2: // right mouse click
             rightmousedown = false;
+            static_mx = e.clientX;
+            static_my = e.clientY;
             break;
         default: // default to left button
             mousedown = false;
@@ -245,8 +382,8 @@ addEventListener("mouseout", e => {
 let zoom = function(clicks) {
     var pt = ctx.transformedPoint(canvas.width / 2, canvas.height / 2);
     ctx.translate(pt.x, pt.y);
-    var factor = Math.pow(scaleFactor, clicks);
-    ctx.scale(factor, factor);
+    scale = Math.pow(scaleFactor, clicks);
+    ctx.scale(scale, scale);
     ctx.translate(-pt.x, -pt.y);
 }
 
@@ -258,7 +395,7 @@ addEventListener("wheel", e => {
     return false;
 })
 
-let hit = function(f = Factory) {
+let hit = function(f) {
     let x = f.x,
         y = f.y;
     let w2 = f.w;

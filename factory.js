@@ -8,12 +8,13 @@ let Icons = {
     power: "images/power.png",
     hydrogen: "images/tile.png",
     water: "images/water.png",
-    carbon: "images/tile.png",
+    carbon: "images/carbon.png",
     grass: "images/tile.png",
-    iron: "images/tile.png",
+    iron: "images/iron.png",
     slag: "images/tile.png",
-    trees: "images/tile.png",
-    silicate: "images/tile.png"
+    trees: "images/trees.png",
+    silicate: "images/tile.png",
+    factory: "images/factory.png"
 }
 
 let node_colors = {
@@ -29,7 +30,7 @@ let node_colors = {
     iron: "#ba7254",
     rocket: "#ff99e6",
     silicates: "#b6c9a5",
-    trees: "#ffffff",
+    trees: "#2E6230",
     carbon_dioxide: "#ffffff",
     food: "#ffffff"
 }
@@ -53,7 +54,7 @@ let FactoryTypes = {
     },
     oxygen: {
         name: "Oxygen Electrolysis Chamber",
-        icon: Icons["oxygen"],
+        icon: Icons["factory"],
         inputs: {
             power: {},
             water: {}
@@ -66,7 +67,7 @@ let FactoryTypes = {
 
     carbon: {
         name: "Charcoal Hut",
-        icon: Icons["carbon"],
+        icon: Icons["factory"],
         inputs: {
             trees: {}
         },
@@ -77,7 +78,7 @@ let FactoryTypes = {
     },
     iron: {
         name: "Iron Mine",
-        icon: Icons["iron"],
+        icon: Icons["factory"],
         inputs: {},
         outputs: {
             iron: {},
@@ -86,7 +87,7 @@ let FactoryTypes = {
     },
     steel: {
         name: "Steel Production Facility",
-        icon: Icons["steel"],
+        icon: Icons["factory"],
         inputs: {
             iron: {},
             carbon: {},
@@ -99,7 +100,7 @@ let FactoryTypes = {
     },
     rocket: {
         name: "Rocket Fabricator",
-        icon: Icons["rocket"],
+        icon: Icons["factory"],
         inputs: {
             steel: {},
             methane: {},
@@ -157,10 +158,16 @@ class Factory {
 
         // draw the factory box
         ctx.beginPath();
-        ctx.fillStyle = "#223333";
+        ctx.fillStyle = "#222233";
         ctx.fillRect(dx, dy, self.w, self.h);
         ctx.strokeStyle = "#444";
         ctx.strokeRect(dx, dy, self.w, self.h);
+        ctx.closePath();
+
+        ctx.beginPath();
+        ctx.drawImage(self.icon, 0, 0, self.icon.width, self.icon.height, self.x + 5, self.y + 10, 24, 24);
+        //ctx.fillStyle = "rgba(0,0,0,.5)";
+        //ctx.fillRect(self.x, self.y, self.w, self.h);
         ctx.closePath();
 
         let lowest = 0;
@@ -224,10 +231,6 @@ class Factory {
         if (this.h == 44) {
             this.h += (lowest - self.y) - ((self.node_radius * 2) + 10);
         }
-
-        ctx.beginPath();
-        ctx.drawImage(self.icon, 0, 0, self.icon.width, self.icon.height, self.x + 5, self.y + 10, 18, 18);
-        ctx.closePath();
     }
     calc_connections() {
         let self = this;
