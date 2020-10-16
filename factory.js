@@ -1,18 +1,19 @@
 let Icons = {
-    credit: "images/wallet.png",
+    credit: "images/tile.png",
     steel: "images/steel.png",
     oxygen: "images/oxygen.png",
     methane: "images/methane.png",
     rocket: "images/rocket.png",
     station: "images/station.png",
     power: "images/power.png",
-    hydrogen: "images/wallet.png",
+    hydrogen: "images/tile.png",
     water: "images/water.png",
-    carbon: "images/wallet.png",
-    grass: "images/wallet.png",
-    iron: "images/wallet.png",
-    slag: "images/wallet.png",
-    silicate: "images/wallet.png"
+    carbon: "images/tile.png",
+    grass: "images/tile.png",
+    iron: "images/tile.png",
+    slag: "images/tile.png",
+    trees: "images/tile.png",
+    silicate: "images/tile.png"
 }
 
 let node_colors = {
@@ -27,7 +28,10 @@ let node_colors = {
     slag: "#c9bbab",
     iron: "#ba7254",
     rocket: "#ff99e6",
-    silicates: "#b6c9a5"
+    silicates: "#b6c9a5",
+    trees: "#ffffff",
+    carbon_dioxide: "#ffffff",
+    food: "#ffffff"
 }
 
 let FactoryTypes = {
@@ -59,12 +63,16 @@ let FactoryTypes = {
             oxygen: {}
         }
     },
+
     carbon: {
-        name: "Carbon Mine",
+        name: "Charcoal Hut",
         icon: Icons["carbon"],
-        inputs: {},
+        inputs: {
+            trees: {}
+        },
         outputs: {
-            carbon: {}
+            carbon: {},
+            carbon_dioxide: {}
         }
     },
     iron: {
@@ -101,7 +109,21 @@ let FactoryTypes = {
         outputs: {
             rocket: {}
         }
-    }
+    },
+    trees: {
+        name: "Synthetic Forest",
+        icon: Icons["trees"],
+        inputs: {
+            power: {},
+            water: {}
+        },
+        outputs: {
+            carbon: {},
+            carbon_dioxide: {},
+            food: {},
+            trees: {}
+        }
+    },
 }
 
 // Factory Definition
@@ -127,9 +149,6 @@ class Factory {
         this.h += tallest * ((this.node_radius * 2) + 5);
         this.h += 10;
 
-        let name_width = ctx.measureText(this.name).width;
-        //this.w = name_width > 150 ? name_width : 150;
-
         factories.push(this);
     }
     update() {
@@ -151,21 +170,29 @@ class Factory {
 
         dx = self.x;
         dy = self.y + self.icon.height - (self.node_radius * 2) - 5;
-        Object.keys(self.inputs).forEach((k, i) => {
+        Object.keys(self.inputs).forEach(k => {
+
             let o = self.inputs[k];
+            // Only do this the first time
+            if (!o.name) {
+                o.name = k;
+                o.parent = self;
+                o.r = self.node_radius;
+            }
+
             o.x = dx;
             o.y = dy;
-            o.name = k;
-            o.parent = self;
-            o.r = self.node_radius;
+
             ctx.beginPath();
             ctx.fillStyle = node_colors[o.name];
             ctx.arc(o.x, o.y, self.node_radius, 0, 2 * Math.PI);
             ctx.fill();
             ctx.closePath();
+
             ctx.beginPath();
             ctx.fillText(o.name, o.x + font_size, o.y + 5);
             ctx.closePath();
+
             dy += (self.node_radius * 2) + 5;
         });
 
@@ -184,18 +211,16 @@ class Factory {
             ctx.arc(o.x, o.y, self.node_radius, 0, 2 * Math.PI);
             ctx.fill();
             ctx.closePath();
+
             ctx.beginPath();
             ctx.fillText(o.name, o.x - ctx.measureText(o.name).width - self.node_radius * 2, o.y + self.node_radius / 2);
             ctx.closePath();
+
             dy += (self.node_radius * 2) + 5;
-            //self.h += dy;
         });
 
         ctx.beginPath();
-        //ctx.fillStyle = "#fff";
-        //ctx.fillText(self.name, self.x + 9, self.y + font_size + 9);
         ctx.drawImage(self.icon, 0, 0, self.icon.width, self.icon.height, self.x + 5, self.y + 10, 18, 18);
-        //ctx.drawImage(self.icon, self.x + 10, self.y + 10);
         ctx.closePath();
     }
     calc_connections() {
@@ -204,11 +229,13 @@ class Factory {
         let dy = self.y + (self.node_radius * 2) + 10;
         Object.keys(self.outputs).forEach(k => {
             let o = self.outputs[k];
-            o.x = dx;
-            o.y = dy;
-            o.name = k;
-            o.parent = self;
-            o.r = self.node_radius;
+            if (!o.name) {
+                o.x = dx;
+                o.y = dy;
+                o.name = k;
+                o.parent = self;
+                o.r = self.node_radius;
+            }
 
             if (o.connected) {
 

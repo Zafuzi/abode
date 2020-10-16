@@ -35,19 +35,19 @@ let grid_size = 2;
 
 let font_size = 18;
 let then = performance.now();
-let FPS = 100;
+let FPS = 120;
 let t = 0;
 
 let dragging;
 
-new Factory(FactoryTypes.steel, 800, 300);
-new Factory(FactoryTypes.iron, 400, 200);
-new Factory(FactoryTypes.carbon, 400, 350);
-new Factory(FactoryTypes.oxygen, 400, 450);
+new Factory(FactoryTypes.steel, 600, 400);
+new Factory(FactoryTypes.iron, 400, 300);
+new Factory(FactoryTypes.carbon, 400, 450);
+new Factory(FactoryTypes.oxygen, 400, 550);
 new Factory(FactoryTypes.solar, 50, 450);
 new Factory(FactoryTypes.water, 50, 550);
 new Factory(FactoryTypes.rocket, 1100, 300);
-
+new Factory(FactoryTypes.trees, 100, 100)
 
 let loop = function() {
     t++;
@@ -65,8 +65,6 @@ let loop = function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    connections = [];
 
     factories.forEach(f => {
         f.update();
@@ -251,6 +249,8 @@ let zoom = function(clicks) {
     ctx.scale(factor, factor);
     ctx.translate(-pt.x, -pt.y);
 }
+
+zoom(25);
 
 addEventListener("wheel", e => {
     var delta = e.wheelDelta ? e.wheelDelta / 40 : e.detail ? -e.detail : 0;
