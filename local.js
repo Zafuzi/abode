@@ -40,10 +40,10 @@ let t = 0;
 
 let dragging;
 
-new Factory(FactoryTypes.steel, 600, 400);
-new Factory(FactoryTypes.iron, 400, 300);
-new Factory(FactoryTypes.carbon, 400, 450);
-new Factory(FactoryTypes.oxygen, 400, 550);
+new Factory(FactoryTypes.steel, 800, 400);
+new Factory(FactoryTypes.iron, 500, 300);
+new Factory(FactoryTypes.carbon, 500, 480);
+new Factory(FactoryTypes.oxygen, 500, 600);
 new Factory(FactoryTypes.solar, 50, 450);
 new Factory(FactoryTypes.water, 50, 550);
 new Factory(FactoryTypes.rocket, 1100, 300);
@@ -250,7 +250,7 @@ let zoom = function(clicks) {
     ctx.translate(-pt.x, -pt.y);
 }
 
-zoom(25);
+//zoom(25);
 
 addEventListener("wheel", e => {
     var delta = e.wheelDelta ? e.wheelDelta / 40 : e.detail ? -e.detail : 0;

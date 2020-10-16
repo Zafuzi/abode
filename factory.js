@@ -142,12 +142,7 @@ class Factory {
         this.y = y;
         this.w = 100;
         this.node_radius = 5;
-        this.h = this.icon.height + 40;
-
-        let tallest = Object.keys(this.inputs).length > Object.keys(this.outputs).length ? Object.keys(this.inputs).length : Object.keys(this.outputs).length;
-
-        this.h += tallest * ((this.node_radius * 2) + 5);
-        this.h += 10;
+        this.h = 44;
 
         factories.push(this);
     }
@@ -168,10 +163,14 @@ class Factory {
         ctx.strokeRect(dx, dy, self.w, self.h);
         ctx.closePath();
 
-        dx = self.x;
-        dy = self.y + self.icon.height - (self.node_radius * 2) - 5;
-        Object.keys(self.inputs).forEach(k => {
+        let lowest = 0;
 
+        dx = self.x;
+        dy = self.y + 44 + (self.node_radius * 2) + 10;
+        Object.keys(self.inputs).forEach(k => {
+            if (dy > lowest) {
+                lowest = dy;
+            }
             let o = self.inputs[k];
             // Only do this the first time
             if (!o.name) {
@@ -192,13 +191,15 @@ class Factory {
             ctx.beginPath();
             ctx.fillText(o.name, o.x + font_size, o.y + 5);
             ctx.closePath();
-
-            dy += (self.node_radius * 2) + 5;
+            dy += (self.node_radius * 2) + 10;
         });
 
         dx = self.x + self.w;
         dy = self.y + (self.node_radius * 2) + 10;
         Object.keys(self.outputs).forEach(k => {
+            if (dy > lowest) {
+                lowest = dy;
+            }
             let o = self.outputs[k];
             o.x = dx;
             o.y = dy;
@@ -216,8 +217,13 @@ class Factory {
             ctx.fillText(o.name, o.x - ctx.measureText(o.name).width - self.node_radius * 2, o.y + self.node_radius / 2);
             ctx.closePath();
 
-            dy += (self.node_radius * 2) + 5;
+
+            dy += (self.node_radius * 2) + 10;
         });
+
+        if (this.h == 44) {
+            this.h += (lowest - self.y) - ((self.node_radius * 2) + 10);
+        }
 
         ctx.beginPath();
         ctx.drawImage(self.icon, 0, 0, self.icon.width, self.icon.height, self.x + 5, self.y + 10, 18, 18);
