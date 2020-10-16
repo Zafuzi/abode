@@ -1,3 +1,20 @@
+let Icons = {
+    credit: "images/wallet.png",
+    steel: "images/steel.png",
+    oxygen: "images/oxygen.png",
+    methane: "images/methane.png",
+    rocket: "images/rocket.png",
+    station: "images/station.png",
+    power: "images/power.png",
+    hydrogen: "images/wallet.png",
+    water: "images/water.png",
+    carbon: "images/wallet.png",
+    grass: "images/wallet.png",
+    iron: "images/wallet.png",
+    slag: "images/wallet.png",
+    silicate: "images/wallet.png"
+}
+
 let node_colors = {
     power: "#fff3a6",
     oxygen: "#ffa6a6",
@@ -16,6 +33,7 @@ let node_colors = {
 let FactoryTypes = {
     solar: {
         name: "Solar Panels",
+        icon: Icons["power"],
         inputs: {},
         outputs: {
             power: {}
@@ -23,6 +41,7 @@ let FactoryTypes = {
     },
     water: {
         name: "Big Lake of Fresh Water",
+        icon: Icons["water"],
         inputs: {},
         outputs: {
             water: {}
@@ -30,6 +49,7 @@ let FactoryTypes = {
     },
     oxygen: {
         name: "Oxygen Electrolysis Chamber",
+        icon: Icons["oxygen"],
         inputs: {
             power: {},
             water: {}
@@ -41,6 +61,7 @@ let FactoryTypes = {
     },
     carbon: {
         name: "Carbon Mine",
+        icon: Icons["carbon"],
         inputs: {},
         outputs: {
             carbon: {}
@@ -48,6 +69,7 @@ let FactoryTypes = {
     },
     iron: {
         name: "Iron Mine",
+        icon: Icons["iron"],
         inputs: {},
         outputs: {
             iron: {},
@@ -56,6 +78,7 @@ let FactoryTypes = {
     },
     steel: {
         name: "Steel Production Facility",
+        icon: Icons["steel"],
         inputs: {
             iron: {},
             carbon: {},
@@ -68,6 +91,7 @@ let FactoryTypes = {
     },
     rocket: {
         name: "Rocket Fabricator",
+        icon: Icons["rocket"],
         inputs: {
             steel: {},
             methane: {},
@@ -83,20 +107,28 @@ let FactoryTypes = {
 // Factory Definition
 class Factory {
     constructor(type, x, y) {
+
         this.name = type.name;
         this.inputs = type.inputs;
         this.outputs = type.outputs;
+
+        let e = new Image();
+        e.src = type.icon;
+        this.icon = e;
+
         this.x = x;
         this.y = y;
         this.w = 100;
         this.node_radius = 5;
+        this.h = this.icon.height + 40;
 
-        let tallest = Object.keys(type.inputs).length > Object.keys(type.outputs).length ? Object.keys(type.inputs).length : Object.keys(type.outputs).length;
-        console.log(tallest)
-        this.h = 45 + 9 + 3 + (tallest * (this.node_radius * 2 + 5));
+        let tallest = Object.keys(this.inputs).length > Object.keys(this.outputs).length ? Object.keys(this.inputs).length : Object.keys(this.outputs).length;
+
+        this.h += tallest * ((this.node_radius * 2) + 5);
+        this.h += 10;
 
         let name_width = ctx.measureText(this.name).width;
-        this.w += name_width;
+        //this.w = name_width > 150 ? name_width : 150;
 
         factories.push(this);
     }
@@ -118,8 +150,8 @@ class Factory {
         ctx.closePath();
 
         dx = self.x;
-        dy = self.y + 45 + 9 + 3;
-        Object.keys(self.inputs).forEach(k => {
+        dy = self.y + self.icon.height - (self.node_radius * 2) - 5;
+        Object.keys(self.inputs).forEach((k, i) => {
             let o = self.inputs[k];
             o.x = dx;
             o.y = dy;
@@ -134,11 +166,11 @@ class Factory {
             ctx.beginPath();
             ctx.fillText(o.name, o.x + font_size, o.y + 5);
             ctx.closePath();
-            dy += self.node_radius * 2 + 5;
+            dy += (self.node_radius * 2) + 5;
         });
 
         dx = self.x + self.w;
-        dy = self.y + self.node_radius * 2 + 3;
+        dy = self.y + (self.node_radius * 2) + 10;
         Object.keys(self.outputs).forEach(k => {
             let o = self.outputs[k];
             o.x = dx;
@@ -155,18 +187,21 @@ class Factory {
             ctx.beginPath();
             ctx.fillText(o.name, o.x - ctx.measureText(o.name).width - self.node_radius * 2, o.y + self.node_radius / 2);
             ctx.closePath();
-            dy += self.node_radius * 2 + 5;
+            dy += (self.node_radius * 2) + 5;
+            //self.h += dy;
         });
 
         ctx.beginPath();
-        ctx.fillStyle = "#fff";
-        ctx.fillText(self.name, self.x + 9, self.y + font_size + 9);
+        //ctx.fillStyle = "#fff";
+        //ctx.fillText(self.name, self.x + 9, self.y + font_size + 9);
+        ctx.drawImage(self.icon, 0, 0, self.icon.width, self.icon.height, self.x + 5, self.y + 10, 18, 18);
+        //ctx.drawImage(self.icon, self.x + 10, self.y + 10);
         ctx.closePath();
     }
     calc_connections() {
         let self = this;
         let dx = self.x + self.w;
-        let dy = self.y + self.node_radius * 2 + 3;
+        let dy = self.y + (self.node_radius * 2) + 10;
         Object.keys(self.outputs).forEach(k => {
             let o = self.outputs[k];
             o.x = dx;
