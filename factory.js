@@ -41,7 +41,9 @@ let FactoryTypes = {
         icon: Icons["power"],
         inputs: {},
         outputs: {
-            power: {}
+            power: {
+                rate: 15
+            }
         }
     },
     water: {
@@ -54,7 +56,7 @@ let FactoryTypes = {
     },
     oxygen: {
         name: "Oxygen Electrolysis Chamber",
-        icon: Icons["factory"],
+        icon: Icons["oxygen"],
         inputs: {
             power: {},
             water: {}
@@ -64,10 +66,9 @@ let FactoryTypes = {
             oxygen: {}
         }
     },
-
     carbon: {
         name: "Charcoal Hut",
-        icon: Icons["factory"],
+        icon: Icons["carbon"],
         inputs: {
             trees: {}
         },
@@ -78,7 +79,7 @@ let FactoryTypes = {
     },
     iron: {
         name: "Iron Mine",
-        icon: Icons["factory"],
+        icon: Icons["iron"],
         inputs: {},
         outputs: {
             iron: {},
@@ -87,7 +88,7 @@ let FactoryTypes = {
     },
     steel: {
         name: "Steel Production Facility",
-        icon: Icons["factory"],
+        icon: Icons["steel"],
         inputs: {
             iron: {},
             carbon: {},
@@ -100,7 +101,7 @@ let FactoryTypes = {
     },
     rocket: {
         name: "Rocket Fabricator",
-        icon: Icons["factory"],
+        icon: Icons["rocket"],
         inputs: {
             steel: {},
             methane: {},
@@ -115,33 +116,90 @@ let FactoryTypes = {
         name: "Synthetic Forest",
         icon: Icons["trees"],
         inputs: {
+            carbon_dioxide: {},
             power: {},
             water: {}
         },
         outputs: {
-            carbon: {},
-            carbon_dioxide: {},
+            oxygen: {},
             food: {},
             trees: {}
         }
     },
+    methane: {
+        name: "Farting Cows",
+        icon: Icons["methane"],
+        inputs: {
+            grass: {},
+            water: {}
+        },
+        outputs: {
+            methane: {}
+        }
+    },
+    grass: {
+        name: "Grassfield",
+        icon: Icons["grass"],
+        inputs: {
+            water: {}
+        },
+        outputs: {
+            grass: {},
+            oxygen: {}
+        }
+    }
+}
+
+function clone(obj) {
+    var copy;
+
+    // Handle the 3 simple types, and null or undefined
+    if (null == obj || "object" != typeof obj) return obj;
+
+    // Handle Date
+    if (obj instanceof Date) {
+        copy = new Date();
+        copy.setTime(obj.getTime());
+        return copy;
+    }
+
+    // Handle Array
+    if (obj instanceof Array) {
+        copy = [];
+        for (var i = 0, len = obj.length; i < len; i++) {
+            copy[i] = clone(obj[i]);
+        }
+        return copy;
+    }
+
+    // Handle Object
+    if (obj instanceof Object) {
+        copy = {};
+        for (var attr in obj) {
+            if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr]);
+        }
+        return copy;
+    }
+
+    throw new Error("Unable to copy obj! Its type isn't supported.");
 }
 
 // Factory Definition
 class Factory {
     constructor(type, x, y) {
 
-        this.name = type.name;
-        this.inputs = type.inputs;
-        this.outputs = type.outputs;
+        let t = clone(type);
+        this.name = t.name
+        this.inputs = t.inputs;
+        this.outputs = t.outputs;
 
         let e = new Image();
-        e.src = type.icon;
+        e.src = t.icon;
         this.icon = e;
 
         this.x = x;
         this.y = y;
-        this.w = 100;
+        this.w = 150;
         this.node_radius = 5;
         this.h = 44;
 
@@ -182,7 +240,6 @@ class Factory {
             // Only do this the first time
             if (!o.name) {
                 o.name = k;
-                o.parent = self;
                 o.r = self.node_radius;
             }
 
@@ -211,7 +268,6 @@ class Factory {
             o.x = dx;
             o.y = dy;
             o.name = k;
-            o.parent = self;
             o.r = self.node_radius;
 
             ctx.beginPath();
@@ -242,12 +298,10 @@ class Factory {
                 o.x = dx;
                 o.y = dy;
                 o.name = k;
-                o.parent = self;
                 o.r = self.node_radius;
             }
 
             if (o.connected) {
-
                 let p = o.connected;
                 if (p.remove_on_mouse_up && !mousedown) {
                     o.connected = null;
@@ -273,15 +327,10 @@ class Factory {
                     return;
                 }
 
-                if (!p.parent) {
-                    return;
-                }
-
                 let connection = {};
                 let left = o.x > p.x ? p : o;
 
                 connection.remote_node = p;
-                connection.parent = self;
 
                 let middle = (o.x + p.x) / 2;
 

@@ -20,9 +20,10 @@ let scaleFactor = 1.025;
 
 let canvas = document.querySelector("#game_canvas");
 let ctx = canvas.getContext('2d');
-ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingEnabled = false;
 ctx.lineWidth = 3;
 
+let menu = document.querySelector("#add_menu");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
@@ -44,14 +45,21 @@ let scale = 1;
 
 let dragging;
 
-new Factory(FactoryTypes.steel, 800, 400);
-new Factory(FactoryTypes.iron, 500, 300);
-new Factory(FactoryTypes.carbon, 500, 500);
-new Factory(FactoryTypes.oxygen, 500, 600);
-new Factory(FactoryTypes.solar, 60, 500);
-new Factory(FactoryTypes.water, 60, 600);
-new Factory(FactoryTypes.rocket, 1100, 300);
-new Factory(FactoryTypes.trees, 100, 100)
+let add_factory = function(name) {
+    console.log("click")
+    var pt = ctx.transformedPoint(canvas.width / 2, canvas.height / 2);
+    new Factory(FactoryTypes[name], pt.x, pt.y);
+}
+
+
+let noder = rplc8("#noder");
+let a = [];
+Object.keys(FactoryTypes).forEach(k => {
+    let t = clone(FactoryTypes[k]);
+    t.type = k;
+    a.push(t);
+});
+noder.update(a);
 
 let loop = function() {
     t++;
@@ -135,6 +143,7 @@ let loop = function() {
     }
 
 
+    /*
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     // draw the menu
@@ -156,6 +165,7 @@ let loop = function() {
         ctx.closePath();
     }
     ctx.restore();
+    */
 
     requestAnimationFrame(FPS_LOCK);
 }
@@ -281,8 +291,6 @@ let FPS_LOCK = function() {
 }
 requestAnimationFrame(FPS_LOCK);
 
-
-
 addEventListener("contextmenu", e => {
     e.preventDefault();
 })
@@ -292,22 +300,30 @@ addEventListener("mousedown", e => {
     document.body.style.mozUserSelect = document.body.style.webkitUserSelect = document.body.style.userSelect = 'none';
 
     let btn = e.button;
-    e.preventDefault();
+
     mouse_click.x = e.pageX;
     mouse_click.y = e.pageY
     switch (btn) {
         case 0: // left button
             mousedown = true;
+            middlemousedown = false;
+            rightmousedown = false;
             break;
         case 1: // middle button
+            e.preventDefault();
             middlemousedown = true;
+            mousedown = false;
+            rightmousedown = false;
             lastX = e.offsetX || (e.pageX - canvas.offsetLeft);
             lastY = e.offsetY || (e.pageY - canvas.offsetTop);
             dragStart = ctx.transformedPoint(lastX, lastY);
             dragged = false;
             break;
         case 2: // right mouse click
+            e.preventDefault();
             rightmousedown = true;
+            middlemousedown = false;
+            mousedown = false;
             static_mx = e.clientX;
             static_my = e.clientY;
             break;
@@ -321,29 +337,11 @@ addEventListener("mousedown", e => {
 })
 
 addEventListener("mouseup", e => {
-
-    let btn = e.button;
     e.preventDefault();
-
-    mousedown = false;
     dragging = false;
-    switch (btn) {
-        case 0: // left button
-            mousedown = false;
-            break;
-        case 1: // middle button
-            middlemousedown = false;
-            dragStart = null;
-            break;
-        case 2: // right mouse click
-            rightmousedown = false;
-            static_mx = e.clientX;
-            static_my = e.clientY;
-            break;
-        default: // default to left button
-            mousedown = false;
-            break;
-    }
+    mousedown = false;
+    rightmousedown = false;
+    middlemousedown = false;
 })
 
 addEventListener("mousemove", e => {
@@ -379,6 +377,12 @@ addEventListener("mouseout", e => {
     dragStart = null;
 });
 
+addEventListener("wheel", e => {
+    var delta = e.wheelDelta ? e.wheelDelta / 40 : e.detail ? -e.detail : 0;
+    if (delta) zoom(delta);
+    return false;
+})
+
 let zoom = function(clicks) {
     var pt = ctx.transformedPoint(canvas.width / 2, canvas.height / 2);
     ctx.translate(pt.x, pt.y);
@@ -386,14 +390,6 @@ let zoom = function(clicks) {
     ctx.scale(scale, scale);
     ctx.translate(-pt.x, -pt.y);
 }
-
-//zoom(25);
-
-addEventListener("wheel", e => {
-    var delta = e.wheelDelta ? e.wheelDelta / 40 : e.detail ? -e.detail : 0;
-    if (delta) zoom(delta);
-    return false;
-})
 
 let hit = function(f) {
     let x = f.x,
@@ -416,7 +412,6 @@ let hit_rad = function(o) {
     let rDist = (xx * xx) + (yy * yy);
     return rDist < rHit;
 }
-
 
 // Adds ctx.getTransform() - returns an SVGMatrix
 // Adds ctx.transformedPoint(x,y) - returns an SVGPoint
