@@ -31,7 +31,7 @@ lastY = canvas.height / 2;
 // GAME START
 let connections = [];
 let factories = [];
-let grid_size = 2;
+let grid_size = 10;
 
 let font_size = 18;
 let then = performance.now();
@@ -42,10 +42,10 @@ let dragging;
 
 new Factory(FactoryTypes.steel, 800, 400);
 new Factory(FactoryTypes.iron, 500, 300);
-new Factory(FactoryTypes.carbon, 500, 480);
+new Factory(FactoryTypes.carbon, 500, 500);
 new Factory(FactoryTypes.oxygen, 500, 600);
-new Factory(FactoryTypes.solar, 50, 450);
-new Factory(FactoryTypes.water, 50, 550);
+new Factory(FactoryTypes.solar, 60, 500);
+new Factory(FactoryTypes.water, 60, 600);
 new Factory(FactoryTypes.rocket, 1100, 300);
 new Factory(FactoryTypes.trees, 100, 100)
 
