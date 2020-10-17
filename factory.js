@@ -126,6 +126,9 @@ class Connector {
         this.x = 0;
         this.y = 0;
         this.r = connector_radius;
+        if (this.id == "any") {
+            this.any = true; // special connector
+        }
     }
     update(parent = Factory, offset = Number) {
         // figure out where to draw me x, y offset from the parent and my position in the object array
@@ -147,6 +150,26 @@ class Connector {
             parent.dy += (self.r * 2);
             if (self.type == "output") {
                 parent.h += (self.r * 2);
+            }
+        }
+
+        if (parent.type == "splitter") {
+            if (self.type == "output") {
+                let o = parent.inputs[0];
+                self.rate = o.rate / 2;
+                self.unit = o.unit;
+                self.id = o.id;
+            } else {
+                // Splitter input type "any"
+                if (self.connected) {
+                    self.id = self.connected.id;
+                    self.rate = self.connected.rate;
+                    self.unit = self.connected.unit;
+                } else {
+                    self.id = "any";
+                    self.rate = 0;
+                    self.unit = "u";
+                }
             }
         }
     }
@@ -215,7 +238,6 @@ class Factory {
         self.header_height = self.h;
         self.dy = self.y + self.header_height;
 
-        //this.calc_connections();
         self.outputs.forEach((output, offset) => {
             output.update(self, offset);
         });
@@ -224,6 +246,7 @@ class Factory {
             input.update(self, offset)
         });
 
+        this.calc_connections();
     }
     draw() {
         let self = this;
@@ -262,6 +285,85 @@ class Factory {
 
         self.inputs.forEach(input => { input.draw() });
         self.outputs.forEach(output => { output.draw() });
+    }
+
+    calc_connections() {
+        let self = this;
+
+        self.outputs.forEach(o => {
+            if (o.connected) {
+                let p = o.connected; // whatever I am connected to
+                if (p.remove_on_mouse_up && !mousedown) {
+                    // This only occurs when I am dragging from a connector to attach it somewhere
+                    // So the connector in this case is my mouse
+                    // start by clearing the connection
+                    // TODO make some allow multiple connections??
+                    o.connected = null;
+
+                    // first check if I am dropping this onto another connector
+                    factories.forEach(f => {
+                        f.inputs.forEach(i => {
+                            if (i.id == o.id || i.any) {
+                                if (hit_rad(i)) {
+                                    if (i.connected && i.connected.connected == i) {
+                                        // Tell the ouput we are connected to, to forget about our connection
+                                        // It's over Brian. Seriously, move on.
+                                        i.connected.connected = null;
+                                        o.connected = null;
+                                        i.connected = null;
+                                    }
+                                    o.connected = i; // connect them
+                                    i.connected = o;
+                                }
+                            }
+                        })
+                    })
+
+                    return;
+                }
+
+                let connection = {};
+                let left = o.x > p.x ? p : o;
+
+                connection.remote_node = p;
+
+                let middle = (o.x + p.x) / 2;
+
+                if (o == left) {
+                    let cp1 = {
+                        x: middle,
+                        y: o.y
+                    }
+                    let cp2 = {
+                        x: middle,
+                        y: p.y
+                    }
+                    connection.x = o.x;
+                    connection.y = o.y;
+                    connection.cp1 = cp1;
+                    connection.cp2 = cp2;
+                    connection.px = p.x;
+                    connection.py = p.y;
+                } else {
+                    let cp1 = {
+                        x: middle,
+                        y: p.y
+                    }
+                    let cp2 = {
+                        x: middle,
+                        y: o.y
+                    }
+                    connection.x = o.x;
+                    connection.y = o.y;
+                    connection.cp1 = cp1;
+                    connection.cp2 = cp2;
+                    connection.px = p.x;
+                    connection.py = p.y;
+                }
+                connection.strokeStyle = node_colors[o.id];
+                self.connections.push(connection);
+            } else {}
+        });
     }
 }
 

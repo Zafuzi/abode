@@ -31,7 +31,6 @@ trackTransforms(ctx);
 lastX = canvas.width / 2;
 lastY = canvas.height / 2;
 
-
 // GAME START
 let grid_size = 1;
 
@@ -74,6 +73,7 @@ let loop = function() {
 
     factories.forEach(f => {
         f.update();
+        ctx.lineWidth = 3;
         f.connections.forEach(c => {
             ctx.beginPath();
             ctx.moveTo(c.x, c.y);
@@ -94,7 +94,8 @@ let loop = function() {
 
     if (mousedown) {
         if (dragging) {
-            if (dragging.name) {
+            if (dragging.remove_on_mouse_up) {
+                // this is connected to the mouse location until we let go of the mouse
                 dragging.x = mx;
                 dragging.y = my;
             } else {
@@ -102,8 +103,8 @@ let loop = function() {
                 dragging.f.y = Math.round((my - dragging.diffy) / grid_size) * grid_size;
             }
         } else {
-            for (let i = 0; i < factories.length; i++) {
-                let f = factories[i];
+            // move a single factory around
+            factories.forEach(f => {
                 if (hit(f)) {
                     dragging = {
                         f: f,
@@ -111,33 +112,28 @@ let loop = function() {
                         diffy: (my - f.y)
                     }
                 }
-                Object.keys(f.outputs).forEach(k => {
-                    let o = f.outputs[k];
+                f.outputs.forEach(o => {
+                    if (hit_rad(o)) {
 
-                    if (hit_rad({
-                            x: o.x,
-                            y: o.y,
-                            r: o.r
-                        })) {
+                        // create a dummy "connector" for the output to draw a curve to
+                        // it's the mouses position
                         let p = {
                             remove_on_mouse_up: true,
-                            name: o.name,
+                            id: o.id,
                             x: mx,
                             y: my,
-                            parent: {
-                                name: "mouse",
-                                x: mx,
-                                y: my
-                            }
                         }
-                        f.outputs[k].connected = p;
-                        dragging = p
+                        if (o.connected) {
+                            o.connected.connected = null;
+                        }
+                        o.connected = p;
+                        dragging = p;
                     }
-                });
-            }
+                })
+
+            })
         }
     }
-
 
     /*
     ctx.save();
