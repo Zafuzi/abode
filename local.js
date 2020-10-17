@@ -35,7 +35,7 @@ lastY = canvas.height / 2;
 // GAME START
 let connections = [];
 let factories = [];
-let grid_size = 10;
+let grid_size = 1;
 
 let font_size = 18;
 let then = performance.now();
@@ -51,6 +51,7 @@ let add_factory = function(name) {
     new Factory(FactoryTypes[name], pt.x, pt.y);
 }
 
+add_factory("solar");
 
 let noder = rplc8("#noder");
 let a = [];

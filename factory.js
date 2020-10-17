@@ -201,7 +201,8 @@ class Factory {
         this.y = y;
         this.w = 150;
         this.node_radius = 5;
-        this.h = 44;
+        this.h = 62;
+        this.header_height = 18;
 
         factories.push(this);
     }
@@ -222,6 +223,14 @@ class Factory {
         ctx.strokeRect(dx, dy, self.w, self.h);
         ctx.closePath();
 
+        // Draw the header
+        ctx.fillStyle = "#fff";
+        ctx.fillText(self.name, self.x + 5 + 34, self.y + 10 + 12);
+        if (5 + 34 + ctx.measureText(self.name).width > self.w) {
+            self.w = 5 + 34 + ctx.measureText(self.name).width + 10;
+        }
+
+
         ctx.beginPath();
         ctx.drawImage(self.icon, 0, 0, self.icon.width, self.icon.height, self.x + 5, self.y + 10, 24, 24);
         //ctx.fillStyle = "rgba(0,0,0,.5)";
@@ -231,7 +240,7 @@ class Factory {
         let lowest = 0;
 
         dx = self.x;
-        dy = self.y + 44 + (self.node_radius * 2) + 10;
+        dy = self.y + self.header_height + font_size / 1.2 + (self.node_radius * 2) + 10;
         Object.keys(self.inputs).forEach(k => {
             if (dy > lowest) {
                 lowest = dy;
@@ -259,7 +268,7 @@ class Factory {
         });
 
         dx = self.x + self.w;
-        dy = self.y + (self.node_radius * 2) + 10;
+        dy = self.y + self.header_height + font_size / 1.2 + (self.node_radius * 2) + 10;
         Object.keys(self.outputs).forEach(k => {
             if (dy > lowest) {
                 lowest = dy;
@@ -284,14 +293,14 @@ class Factory {
             dy += (self.node_radius * 2) + 10;
         });
 
-        if (this.h == 44) {
-            this.h += (lowest - self.y) - ((self.node_radius * 2) + 10);
+        if (this.h == 62) {
+            this.h += (lowest - self.y) - (self.header_height + font_size / 1.2 + (self.node_radius * 2)) + 5;
         }
     }
     calc_connections() {
         let self = this;
         let dx = self.x + self.w;
-        let dy = self.y + (self.node_radius * 2) + 10;
+        let dy = self.y + self.header_height + font_size / 1.2 + (self.node_radius * 2) + 10;
         Object.keys(self.outputs).forEach(k => {
             let o = self.outputs[k];
             if (!o.name) {
