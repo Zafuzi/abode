@@ -33,8 +33,6 @@ lastY = canvas.height / 2;
 
 
 // GAME START
-let connections = [];
-let factories = [];
 let grid_size = 1;
 
 let font_size = 18;
@@ -45,22 +43,29 @@ let scale = 1;
 
 let dragging;
 
-let add_factory = function(name) {
-    console.log("click")
-    var pt = ctx.transformedPoint(canvas.width / 2, canvas.height / 2);
-    new Factory(FactoryTypes[name], pt.x, pt.y);
-}
+/*
 
-add_factory("solar");
 
-let noder = rplc8("#noder");
-let a = [];
-Object.keys(FactoryTypes).forEach(k => {
-    let t = clone(FactoryTypes[k]);
-    t.type = k;
-    a.push(t);
-});
-noder.update(a);
+add_factory("oxygen", "Electrolysis Chamber", [
+    add_input("power"),
+    add_input("water")
+], [
+    add_output("oxygen"),
+    add_output("hydrogen")
+]);
+*/
+addEventListener("load", () => {
+    let s = document.querySelector("#noder");
+    s.addEventListener("click", () => {
+        FactoryTypes.solar();
+    })
+    add_factory("water", "Water Pump", [
+        add_input("power")
+    ], [
+        add_output("water")
+    ]);
+})
+
 
 let master_tick_rate = 1000; // one second
 let resources = {};
