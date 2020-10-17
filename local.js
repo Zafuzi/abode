@@ -47,13 +47,11 @@ addEventListener("load", () => {
     s.forEach(b => {
         b.addEventListener("click", (e) => {
             let type = b.dataset.type;
-            console.log(type);
             FactoryTypes[type]();
         })
     });
 })
 
-let master_tick_rate = 1000; // one second
 let resources = {};
 
 let loop = function() {

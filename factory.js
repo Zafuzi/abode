@@ -46,18 +46,20 @@ let add_factory = function(type, name, inputs, outputs) {
     new Factory(type, name, Icons[type], inputs, outputs, pt.x, pt.y);
 }
 
+let master_tick_rate = 1000; // one second
+
 let input_connectors = {
     any: ["input", "any", "Any", 0, "u"],
-    power: ["input", "power", "Power", 10, "kW"],
-    water: ["input", "water", "Water", 10, "L"],
+    power: ["input", "power", "Power", 10 / master_tick_rate, "kW"],
+    water: ["input", "water", "Water", 10 / master_tick_rate, "L"],
 }
 
 let output_connectors = {
     any: ["output", "any", "Any", 0, "u"],
-    power: ["output", "power", "Power", 20, "kW"],
-    oxygen: ["output", "oxygen", "Oxygen", 5, "L"],
-    hydrogen: ["output", "hydrogen", "Hydrogen", 5, "L"],
-    water: ["output", "water", "Water", 1000, "L"],
+    power: ["output", "power", "Power", 20 / master_tick_rate, "kW"],
+    oxygen: ["output", "oxygen", "Oxygen", 5 / master_tick_rate, "L"],
+    hydrogen: ["output", "hydrogen", "Hydrogen", 5 / master_tick_rate, "L"],
+    water: ["output", "water", "Water", 1000 / master_tick_rate, "L"],
 }
 
 let add_input = function(name) {
@@ -153,10 +155,10 @@ class Connector {
             }
         }
 
-        if (parent.type == "splitter") {
+        if (parent.type == "splitter" || parent.type == "storage") {
             if (self.type == "output") {
                 let o = parent.inputs[0];
-                self.rate = o.rate / 2;
+                self.rate = parent.type == "splitter" ? o.rate / 2 : o.rate;
                 self.unit = o.unit;
                 self.id = o.id;
             } else {
@@ -216,6 +218,10 @@ class Factory {
         this.outputs = outputs;
         this.x = x;
         this.y = y;
+        if (this.type == "storage") {
+            this.capacity = 1000;
+            this.amount_stored = 0;
+        }
 
         let e = new Image();
         e.src = icon;
@@ -240,10 +246,23 @@ class Factory {
 
         self.outputs.forEach((output, offset) => {
             output.update(self, offset);
+            if (self.type == "storage" && output.connected) {
+                if (self.amount_stored > 0) {
+                    // TODO limit the output to my max output rate
+                    if (output.connected.rate) {
+                        self.amount_stored -= output.connected.rate;
+                    }
+                }
+            }
         });
 
         self.inputs.forEach((input, offset) => {
             input.update(self, offset)
+            if (self.type == "storage") {
+                if (self.amount_stored < self.capacity) {
+                    self.amount_stored += input.rate;
+                }
+            }
         });
 
         this.calc_connections();
@@ -285,6 +304,15 @@ class Factory {
 
         self.inputs.forEach(input => { input.draw() });
         self.outputs.forEach(output => { output.draw() });
+
+        if (self.capacity) {
+            let n = parseInt(self.amount_stored) + "/" + self.capacity;
+            ctx.fillText(
+                n,
+                self.x + factory_icon_size + (factory_padding * 3) - (ctx.measureText(n).width / 2),
+                self.y + self.h + factory_font_size
+            );
+        }
     }
 
     calc_connections() {
@@ -378,6 +406,13 @@ let FactoryTypes = {
             add_input("any")
         ], [
             add_output("any"),
+            add_output("any")
+        ])
+    },
+    storage: function() {
+        add_factory("storage", "Storage", [
+            add_input("any")
+        ], [
             add_output("any")
         ])
     },
