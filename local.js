@@ -43,29 +43,16 @@ let scale = 1;
 
 let dragging;
 
-/*
-
-
-add_factory("oxygen", "Electrolysis Chamber", [
-    add_input("power"),
-    add_input("water")
-], [
-    add_output("oxygen"),
-    add_output("hydrogen")
-]);
-*/
 addEventListener("load", () => {
-    let s = document.querySelector("#noder");
-    s.addEventListener("click", () => {
-        FactoryTypes.solar();
-    })
-    add_factory("water", "Water Pump", [
-        add_input("power")
-    ], [
-        add_output("water")
-    ]);
+    let s = document.querySelectorAll(".create_factory");
+    s.forEach(b => {
+        b.addEventListener("click", (e) => {
+            let type = b.dataset.type;
+            console.log(type);
+            FactoryTypes[type]();
+        })
+    });
 })
-
 
 let master_tick_rate = 1000; // one second
 let resources = {};

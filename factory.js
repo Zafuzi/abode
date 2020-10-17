@@ -263,11 +263,25 @@ class Factory {
 
 let FactoryTypes = {
     solar: function() {
-        let inputs = [];
-        let outputs = [
+        add_factory("solar", "Solar Panels", [], [
             add_output("power")
-        ]
-        add_factory("solar", "Solar Panels", inputs, outputs)
+        ])
+    },
+    water: function() {
+        add_factory("water", "Water Pump", [
+            add_input("power")
+        ], [
+            add_output("water")
+        ])
+    },
+    oxygen: function() {
+        add_factory("oxygen", "Electrolysis Chamber", [
+            add_input("power"),
+            add_input("water")
+        ], [
+            add_output("oxygen"),
+            add_output("hydrogen")
+        ])
     },
 }
 
