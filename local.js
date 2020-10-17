@@ -62,6 +62,9 @@ Object.keys(FactoryTypes).forEach(k => {
 });
 noder.update(a);
 
+let master_tick_rate = 1000; // one second
+let resources = {};
+
 let loop = function() {
     t++;
 

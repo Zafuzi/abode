@@ -14,7 +14,8 @@ let Icons = {
     slag: "images/tile.png",
     trees: "images/trees.png",
     silicate: "images/tile.png",
-    factory: "images/factory.png"
+    factory: "images/factory.png",
+    tank: "images/tile.png"
 }
 
 let node_colors = {
@@ -42,7 +43,35 @@ let FactoryTypes = {
         inputs: {},
         outputs: {
             power: {
-                rate: 15
+                rate: 20,
+                units: "kW",
+                generator: true
+            }
+        }
+    },
+    battery: {
+        name: "Battery",
+        icon: Icons["power"],
+        inputs: { power: {} },
+        outputs: {
+            power: {
+                rate: 20,
+                units: "kW",
+                capacity: 1000
+            }
+        }
+    },
+    water_storage: {
+        name: "Water Tank",
+        icon: Icons["tank"],
+        inputs: {
+            water: {}
+        },
+        outputs: {
+            water: {
+                rate: 800,
+                units: "L",
+                capacity: 20000
             }
         }
     },
@@ -51,7 +80,11 @@ let FactoryTypes = {
         icon: Icons["water"],
         inputs: {},
         outputs: {
-            water: {}
+            water: {
+                rate: 1000,
+                units: "L",
+                generator: true
+            }
         }
     },
     oxygen: {
@@ -62,8 +95,8 @@ let FactoryTypes = {
             water: {}
         },
         outputs: {
-            hydrogen: {},
-            oxygen: {}
+            hydrogen: { generator: true },
+            oxygen: { generator: true }
         }
     },
     carbon: {
@@ -74,7 +107,7 @@ let FactoryTypes = {
         },
         outputs: {
             carbon: {},
-            carbon_dioxide: {}
+            carbon_dioxide: { generator: true }
         }
     },
     iron: {
@@ -82,8 +115,8 @@ let FactoryTypes = {
         icon: Icons["iron"],
         inputs: {},
         outputs: {
-            iron: {},
-            silicates: {}
+            iron: { generator: true },
+            silicates: { generator: true }
         }
     },
     steel: {
@@ -95,8 +128,8 @@ let FactoryTypes = {
             oxygen: {}
         },
         outputs: {
-            steel: {},
-            slag: {}
+            steel: { generator: true },
+            slag: { generator: true }
         }
     },
     rocket: {
@@ -109,7 +142,7 @@ let FactoryTypes = {
             power: {}
         },
         outputs: {
-            rocket: {}
+            rocket: { generator: true }
         }
     },
     trees: {
@@ -121,9 +154,9 @@ let FactoryTypes = {
             water: {}
         },
         outputs: {
-            oxygen: {},
-            food: {},
-            trees: {}
+            oxygen: { generator: true },
+            food: { generator: true },
+            trees: { generator: true }
         }
     },
     methane: {
@@ -134,7 +167,7 @@ let FactoryTypes = {
             water: {}
         },
         outputs: {
-            methane: {}
+            methane: { generator: true }
         }
     },
     grass: {
@@ -144,8 +177,8 @@ let FactoryTypes = {
             water: {}
         },
         outputs: {
-            grass: {},
-            oxygen: {}
+            grass: { generator: true },
+            oxygen: { generator: true }
         }
     }
 }
@@ -182,6 +215,91 @@ function clone(obj) {
     }
 
     throw new Error("Unable to copy obj! Its type isn't supported.");
+}
+
+
+/*
+        dx = self.x;
+        dy = self.y + self.header_height + font_size / 1.2 + (self.node_radius * 2) + 10;
+
+        Object.keys(self.inputs).forEach(k => {
+            if (dy > lowest) {
+                lowest = dy;
+            }
+            let o = self.inputs[k];
+            // Only do this the first time
+            if (!o.name) {
+                o.name = k;
+                o.r = self.node_radius;
+            }
+
+            o.x = dx;
+            o.y = dy;
+
+            ctx.beginPath();
+            ctx.fillStyle = node_colors[o.name];
+            ctx.arc(o.x, o.y, self.node_radius, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.closePath();
+
+            ctx.beginPath();
+            ctx.fillText(o.name, o.x + font_size, o.y + 5);
+            ctx.closePath();
+            dy += (self.node_radius * 2) + 10;
+        });
+
+
+    grass: {
+        name: "Grassfield",
+        icon: Icons["grass"],
+        inputs: {
+            water: {}
+        },
+        outputs: {
+            grass: { generator: true },
+            oxygen: { generator: true }
+        }
+    }
+
+        */
+
+
+let connector_radius = 10;
+class Connector {
+    constructor(parent = Factory, type = "input", name = "Empty Connector", rate = 0, unit = "u", generator = false) {
+        // don't store the parent in here, just pass it as an arg when needed
+        this.name = name;
+        this.rate = rate;
+        this.type = type;
+        this.unit = unit;
+        this.generator = generator;
+        this.x = parent.x;
+        this.y = parent.y;
+        this.r = connector_radius;
+    }
+    update(parent = Factory, offset = Number) {
+        // figure out where to draw me x, y offset from the parent and my position in the object array
+    }
+    draw() {
+        let self = this;
+
+        ctx.beginPath();
+        ctx.fillStyle = node_colors[self.name];
+        ctx.arc(self.x, self.y, self.r, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.closePath();
+
+        if (self.type == "input") {
+            ctx.beginPath();
+            ctx.fillText(self.name, self.x, self.y + 5);
+            ctx.closePath();
+        } else {
+            ctx.beginPath();
+            let n = (self.rate || 0) + (self.unit || "u/s") + " | " + self.name
+            ctx.fillText(n, self.x - ctx.measureText(n).width - self.r * 2, self.y + self.r / 2);
+            ctx.closePath();
+        }
+    }
 }
 
 // Factory Definition
@@ -226,21 +344,19 @@ class Factory {
         // Draw the header
         ctx.fillStyle = "#fff";
         ctx.fillText(self.name, self.x + 5 + 34, self.y + 10 + 12);
-        if (5 + 34 + ctx.measureText(self.name).width > self.w) {
+        if (5 + 34 + ctx.measureText(self.name).width >= self.w) {
             self.w = 5 + 34 + ctx.measureText(self.name).width + 10;
         }
 
-
         ctx.beginPath();
         ctx.drawImage(self.icon, 0, 0, self.icon.width, self.icon.height, self.x + 5, self.y + 10, 24, 24);
-        //ctx.fillStyle = "rgba(0,0,0,.5)";
-        //ctx.fillRect(self.x, self.y, self.w, self.h);
         ctx.closePath();
 
         let lowest = 0;
 
         dx = self.x;
         dy = self.y + self.header_height + font_size / 1.2 + (self.node_radius * 2) + 10;
+
         Object.keys(self.inputs).forEach(k => {
             if (dy > lowest) {
                 lowest = dy;
@@ -286,9 +402,9 @@ class Factory {
             ctx.closePath();
 
             ctx.beginPath();
-            ctx.fillText(o.name, o.x - ctx.measureText(o.name).width - self.node_radius * 2, o.y + self.node_radius / 2);
+            let n = (o.rate || 0) + (o.units || "u/s") + " | " + o.name
+            ctx.fillText(n, o.x - ctx.measureText(n).width - self.node_radius * 2, o.y + self.node_radius / 2);
             ctx.closePath();
-
 
             dy += (self.node_radius * 2) + 10;
         });
@@ -376,6 +492,13 @@ class Factory {
                 }
                 connection.strokeStyle = node_colors[o.name];
                 self.connections.push(connection);
+            } else {
+                if (!resources[k]) {
+                    resources[k] = 0;
+                }
+                if (o.rate && o.generator) {
+                    resources[k] += o.rate / master_tick_rate;
+                }
             }
             dy += self.node_radius * 2 + 5;
         });
