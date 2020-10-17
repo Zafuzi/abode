@@ -17,10 +17,12 @@ let Icons = {
     silicate: "images/tile.png",
     factory: "images/factory.png",
     tank: "images/tile.png",
-    tile: "images/tile.png"
+    tile: "images/tile.png",
+    splitter: "images/tile.png",
 }
 
 let node_colors = {
+    any: "#fff",
     power: "#fff3a6",
     solar: "#fff3a6",
     oxygen: "#ffa6a6",
@@ -45,11 +47,13 @@ let add_factory = function(type, name, inputs, outputs) {
 }
 
 let input_connectors = {
+    any: ["input", "any", "Any", 0, "u"],
     power: ["input", "power", "Power", 10, "kW"],
     water: ["input", "water", "Water", 10, "L"],
 }
 
 let output_connectors = {
+    any: ["output", "any", "Any", 0, "u"],
     power: ["output", "power", "Power", 20, "kW"],
     oxygen: ["output", "oxygen", "Oxygen", 5, "L"],
     hydrogen: ["output", "hydrogen", "Hydrogen", 5, "L"],
@@ -265,6 +269,14 @@ let FactoryTypes = {
     solar: function() {
         add_factory("solar", "Solar Panels", [], [
             add_output("power")
+        ])
+    },
+    splitter: function() {
+        add_factory("splitter", "Single Splitter", [
+            add_input("any")
+        ], [
+            add_output("any"),
+            add_output("any")
         ])
     },
     water: function() {
