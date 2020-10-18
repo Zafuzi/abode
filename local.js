@@ -47,7 +47,6 @@ addEventListener("load", () => {
     s.forEach(b => {
         b.addEventListener("click", (e) => {
             let type = b.dataset.type;
-            console.log(type);
             FactoryTypes[type]();
         })
     });
@@ -244,7 +243,6 @@ for (let i = 0; i < 360 / d; i++) {
         }
     });
 }
-console.log(context_wheel)
 
 context_wheel.forEach(c => {
     c.x = 0;

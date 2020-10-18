@@ -166,13 +166,18 @@ class Connector {
             }
         }
 
+        // Just make sure that the full width of this connector is contained within the parent factories drawn box
+        // Use capacity here since its the largest number this connecter is allowed to hold
         let n = (Math.floor(parent.resources[self.id].capacity) || 0) + (self.unit || "u/s") + " | " + self.name
         if (ctx.measureText(n).width + self.r * 2 > parent.w) {
             parent.w += (ctx.measureText(n).width + (self.r * 2) + factory_padding * 2) / 2;
         }
 
+        // Make sure that my factory is tall enough for every input
         parent.dy += ((factory_padding * 3) + (self.r * 2 * offset));
         parent.h += ((factory_padding * 3) + (self.r * 2));
+
+        // just need to add a little extra for the first one
         if (offset == 0) {
             parent.dy += (self.r * 2);
             if (self.type == "output") {
@@ -182,12 +187,35 @@ class Connector {
 
         let parent_storage = parent.resources[self.id].in_storage;
         let parent_capacity = parent.resources[self.id].capacity;
-        if (self.type == "output") {
+        let can_produce = true;
+
+        // check each input for the resource that I need first!
+        if (self.type == "input") {
+            // input
+
+            if (!self.connected) {
+                // take shit from myself if I can
+                if (parent_storage - self.usage_rate >= 0) {
+                    parent.resources[self.id].in_storage -= self.usage_rate;
+                } else {
+                    can_produce = false;
+                }
+            } else {
+                if (can_produce) {
+                    // try and take shit from my connected output
+                    let connected_parent_storage = self.connected.parent.resources[self.connected.id].in_storage;
+                    if (connected_parent_storage - self.usage_rate >= 0 &&
+                        parent_storage + self.usage_rate <= parent_capacity) {
+                        self.connected.parent.resources[self.connected.id].in_storage -= self.usage_rate;
+                        parent.resources[self.id].in_storage += self.usage_rate;
+                    }
+                }
+            }
+        } else {
             // produce my own shit
-            console.log(parent_storage, parent_capacity)
+            // Make sure there is room in the factory for this
             if (parent_storage + self.production_rate <= parent_capacity) {
                 // check my parents inputs to make sure they have enough to be used
-                let can_produce = true;
                 parent.inputs.forEach(i => {
                     if (parent.resources[i.id] && parent.resources[i.id].in_storage >= i.usage_rate) {} else {
                         can_produce = false;
@@ -195,17 +223,6 @@ class Connector {
                 })
                 if (can_produce) {
                     parent.resources[self.id].in_storage += self.production_rate;
-                }
-            }
-        } else {
-            // input
-            // take shit from my connected output
-            if (self.connected) {
-                let connected_parent_storage = self.connected.parent.resources[self.connected.id].in_storage;
-                if (connected_parent_storage - self.usage_rate >= 0 &&
-                    parent_storage + self.usage_rate <= parent_capacity) {
-                    self.connected.parent.resources[self.connected.id].in_storage -= self.usage_rate;
-                    parent.resources[self.id].in_storage += self.usage_rate;
                 }
             }
         }
@@ -447,10 +464,10 @@ let FactoryTypes = {
     },
     combiner: function() {
         add_factory("combiner", "Single Combiner", [
-            add_input("any"),
-            add_input("any")
+            add_input("water", 0, 100, 100),
+            add_input("water", 0, 100, 100)
         ], [
-            add_output("any"),
+            add_output("water", 100, 0, 0),
         ])
     },
     splitter: function() {
