@@ -19,6 +19,7 @@ let Icons = {
     tank: "images/tile.png",
     tile: "images/tile.png",
     splitter: "images/tile.png",
+    combiner: "images/tile.png",
 }
 
 let node_colors = {
@@ -38,7 +39,7 @@ let node_colors = {
     silicates: "#b6c9a5",
     trees: "#2E6230",
     carbon_dioxide: "#ffffff",
-    food: "#ffffff"
+    food: "#ffffff",
 }
 
 let add_factory = function(type, name, inputs, outputs) {
@@ -49,36 +50,40 @@ let add_factory = function(type, name, inputs, outputs) {
 let master_tick_rate = 1000; // one second
 
 let input_connectors = {
-    any: ["input", "any", "Any", 0, "u"],
-    power: ["input", "power", "Power", 10 / master_tick_rate, "kW"],
-    water: ["input", "water", "Water", 10 / master_tick_rate, "L"],
+    any: ["input", "any", "Any", "u"],
+    power: ["input", "power", "Power", "kW"],
+    water: ["input", "water", "Water", "L"],
 }
 
 let output_connectors = {
-    any: ["output", "any", "Any", 0, "u"],
-    power: ["output", "power", "Power", 20 / master_tick_rate, "kW"],
-    oxygen: ["output", "oxygen", "Oxygen", 5 / master_tick_rate, "L"],
-    hydrogen: ["output", "hydrogen", "Hydrogen", 5 / master_tick_rate, "L"],
-    water: ["output", "water", "Water", 1000 / master_tick_rate, "L"],
+    any: ["output", "any", "Any", "u"],
+    power: ["output", "power", "Power", "kW"],
+    oxygen: ["output", "oxygen", "Oxygen", "L"],
+    hydrogen: ["output", "hydrogen", "Hydrogen", "L"],
+    water: ["output", "water", "Water", "L"],
 }
 
-let add_input = function(name) {
+let add_input = function(name, production_rate, capacity, usage_rate) {
     return new Connector(
         input_connectors[name][0],
         input_connectors[name][1],
         input_connectors[name][2],
         input_connectors[name][3],
-        input_connectors[name][4],
+        production_rate / master_tick_rate,
+        capacity,
+        usage_rate / master_tick_rate
     )
 }
 
-let add_output = function(name) {
+let add_output = function(name, production_rate, capacity, usage_rate) {
     return new Connector(
         output_connectors[name][0],
         output_connectors[name][1],
         output_connectors[name][2],
         output_connectors[name][3],
-        output_connectors[name][4],
+        production_rate / master_tick_rate,
+        capacity,
+        usage_rate / master_tick_rate
     )
 }
 
@@ -118,30 +123,50 @@ function clone(obj) {
 
 let connector_radius = 10;
 class Connector {
-    constructor(type = "input", id = "tile", name = "Empty Connector", rate = 0, unit = "u") {
+    constructor(
+        type = "input",
+        id = "tile",
+        name = "Empty Connector",
+        unit = "u",
+        production_rate = 0,
+        capacity = 0,
+        usage_rate = 0,
+    ) {
         // don't store the parent in here, just pass it as an arg when needed
-        this.name = name;
-        this.rate = rate;
         this.type = type;
-        this.unit = unit;
         this.id = id;
+        this.name = name;
+        this.unit = unit;
+        this.production_rate = production_rate;
+        this.capacity = capacity;
+        this.usage_rate = usage_rate;
+
         this.x = 0;
         this.y = 0;
         this.r = connector_radius;
-        if (this.id == "any") {
-            this.any = true; // special connector
-        }
     }
     update(parent = Factory, offset = Number) {
         // figure out where to draw me x, y offset from the parent and my position in the object array
         let self = this;
-        self.x = self.type == "input" ? parent.x : parent.x + parent.w;
-        //self.y = parent.y + parent.header_height + ((factory_padding * 3) + (self.r * offset));
+        self.parent = parent; // XXX I really hate doing this since it creates a recursive property
+
+        self.x = self.type == "input" ? parent.x : parent.x + parent.w; // inputs on the left, outputs on the right
         self.y = parent.dy + ((factory_padding * 3) + (self.r * 2 * offset));
+
+        // Just to run once after the outputs are done iterating since they run first
         if (offset == 0) {
             self.y += self.r * 2;
         }
-        let n = (self.rate || 0) + (self.unit || "u/s") + " | " + self.name
+
+        // Set up my parent factory to start tracking the resources I produce / use
+        if (!parent.resources[self.id]) {
+            parent.resources[self.id] = {
+                capacity: self.capacity,
+                in_storage: 0,
+            }
+        }
+
+        let n = (Math.floor(parent.resources[self.id].capacity) || 0) + (self.unit || "u/s") + " | " + self.name
         if (ctx.measureText(n).width + self.r * 2 > parent.w) {
             parent.w += (ctx.measureText(n).width + (self.r * 2) + factory_padding * 2) / 2;
         }
@@ -155,27 +180,53 @@ class Connector {
             }
         }
 
-        if (parent.type == "splitter" || parent.type == "storage") {
-            if (self.type == "output") {
-                let o = parent.inputs[0];
-                self.rate = parent.type == "splitter" ? o.rate / 2 : o.rate;
-                self.unit = o.unit;
-                self.id = o.id;
-            } else {
-                // Splitter input type "any"
-                if (self.connected) {
-                    self.id = self.connected.id;
-                    self.rate = self.connected.rate;
-                    self.unit = self.connected.unit;
-                } else {
-                    self.id = "any";
-                    self.rate = 0;
-                    self.unit = "u";
+        let parent_storage = parent.resources[self.id].in_storage;
+        let parent_capacity = parent.resources[self.id].capacity;
+        if (self.type == "output") {
+            // produce my own shit
+            console.log(parent_storage, parent_capacity)
+            if (parent_storage + self.production_rate <= parent_capacity) {
+                // check my parents inputs to make sure they have enough to be used
+                let can_produce = true;
+                parent.inputs.forEach(i => {
+                    if (parent.resources[i.id] && parent.resources[i.id].in_storage >= i.usage_rate) {} else {
+                        can_produce = false;
+                    }
+                })
+                if (can_produce) {
+                    parent.resources[self.id].in_storage += self.production_rate;
+                }
+            }
+        } else {
+            // input
+            // take shit from my connected output
+            if (self.connected) {
+                let connected_parent_storage = self.connected.parent.resources[self.connected.id].in_storage;
+                if (connected_parent_storage - self.usage_rate >= 0 &&
+                    parent_storage + self.usage_rate <= parent_capacity) {
+                    self.connected.parent.resources[self.connected.id].in_storage -= self.usage_rate;
+                    parent.resources[self.id].in_storage += self.usage_rate;
                 }
             }
         }
+
+        /*
+        // try and use my resources
+        if (self.connected) {
+            if (self.type == "input") {
+                if (self.connected.resource > 0) {
+                    self.connected.resource -= self.rate;
+                }
+            } else {
+                if (self.resource > self.rate) {
+                    self.resource -= self.rate;
+                    self.connected.resource += self.rate;
+                }
+            }
+        }
+        */
     }
-    draw() {
+    draw(parent = Factory) {
         let self = this;
 
         ctx.beginPath();
@@ -184,7 +235,7 @@ class Connector {
         ctx.fill();
         ctx.closePath();
 
-        let n = (self.rate || 0) + (self.unit || "u/s") //+ " | " + self.name
+        let n = (Math.floor(parent.resources[self.id].in_storage) || 0) + (self.unit || "u/s") + " | " + self.name
         if (self.type == "input") {
             ctx.beginPath();
             ctx.fillText(n, self.x + self.r * 2, self.y + self.r / 2);
@@ -216,13 +267,9 @@ class Factory {
         this.name = name;
         this.inputs = inputs;
         this.outputs = outputs;
+        this.resources = [];
         this.x = x;
         this.y = y;
-        if (this.type == "storage") {
-            this.capacity = 1000;
-            this.amount_stored = 0;
-        }
-
         let e = new Image();
         e.src = icon;
         this.icon = e;
@@ -244,25 +291,12 @@ class Factory {
         self.header_height = self.h;
         self.dy = self.y + self.header_height;
 
-        self.outputs.forEach((output, offset) => {
-            output.update(self, offset);
-            if (self.type == "storage" && output.connected) {
-                if (self.amount_stored > 0) {
-                    // TODO limit the output to my max output rate
-                    if (output.connected.rate) {
-                        self.amount_stored -= output.connected.rate;
-                    }
-                }
-            }
-        });
-
         self.inputs.forEach((input, offset) => {
             input.update(self, offset)
-            if (self.type == "storage") {
-                if (self.amount_stored < self.capacity) {
-                    self.amount_stored += input.rate;
-                }
-            }
+        });
+
+        self.outputs.forEach((output, offset) => {
+            output.update(self, offset);
         });
 
         this.calc_connections();
@@ -302,24 +336,29 @@ class Factory {
         );
         ctx.closePath();
 
-        self.inputs.forEach(input => { input.draw() });
-        self.outputs.forEach(output => { output.draw() });
+        self.inputs.forEach(input => { input.draw(self) });
+        self.outputs.forEach(output => { output.draw(self) });
 
         if (self.capacity) {
-            let n = parseInt(self.amount_stored) + "/" + self.capacity;
-            ctx.fillText(
-                n,
-                self.x + factory_icon_size + (factory_padding * 3) - (ctx.measureText(n).width / 2),
-                self.y + self.h + factory_font_size
-            );
+            let dy = self.y + self.h + factory_font_size;
+            Object.keys(self.resources).forEach(k => {
+                let r = self.resources[k];
+                let n = k + " " + Math.floor(r.in_storage) + "/" + Math.floor(r.capacity);
+                ctx.fillText(
+                    n,
+                    self.x + (factory_padding * 3),
+                    dy
+                );
+                dy += factory_font_size;
+            })
         }
     }
-
     calc_connections() {
         let self = this;
 
         self.outputs.forEach(o => {
             if (o.connected) {
+
                 let p = o.connected; // whatever I am connected to
                 if (p.remove_on_mouse_up && !mousedown) {
                     // This only occurs when I am dragging from a connector to attach it somewhere
@@ -398,7 +437,20 @@ class Factory {
 let FactoryTypes = {
     solar: function() {
         add_factory("solar", "Solar Panels", [], [
-            add_output("power")
+            add_output("power", 20, 20, 0)
+        ])
+    },
+    wind_power: function() {
+        add_factory("wind", "Wind Power", [], [
+            add_output("power", 5, 50, 0)
+        ])
+    },
+    combiner: function() {
+        add_factory("combiner", "Single Combiner", [
+            add_input("any"),
+            add_input("any")
+        ], [
+            add_output("any"),
         ])
     },
     splitter: function() {
@@ -411,25 +463,25 @@ let FactoryTypes = {
     },
     storage: function() {
         add_factory("storage", "Storage", [
-            add_input("any")
+            add_input("any", 0, 1000, 0)
         ], [
-            add_output("any")
+            add_output("any", 0, 1000, 0)
         ])
     },
     water: function() {
         add_factory("water", "Water Pump", [
-            add_input("power")
+            add_input("power", 0, 100, 10)
         ], [
-            add_output("water")
+            add_output("water", 100, 100, 0)
         ])
     },
     oxygen: function() {
         add_factory("oxygen", "Electrolysis Chamber", [
-            add_input("power"),
-            add_input("water")
+            add_input("power", 0, 100, 10),
+            add_input("water", 0, 100, 50)
         ], [
-            add_output("oxygen"),
-            add_output("hydrogen")
+            add_output("oxygen", 10, 100, 0),
+            add_output("hydrogen", 10, 100, 0)
         ])
     },
 }

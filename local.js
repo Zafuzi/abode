@@ -47,6 +47,7 @@ addEventListener("load", () => {
     s.forEach(b => {
         b.addEventListener("click", (e) => {
             let type = b.dataset.type;
+            console.log(type);
             FactoryTypes[type]();
         })
     });
