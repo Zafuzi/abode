@@ -11,3 +11,8 @@ sleepless@^2.8.2:
   version "2.8.2"
   resolved "https://registry.yarnpkg.com/sleepless/-/sleepless-2.8.2.tgz#cb4fc16813c40cefc26775204626de6f83dba42f"
   integrity sha512-WIVyDHLGi9GxvsKuhMtf4LRmO4TM77LlKnAsqVo+980un355TWUjHFHAh9YmsvUfqWWi7CujZdE8YMZ5pXabBw==
+
+vue@^2.6.12:
+  version "2.6.12"
+  resolved "https://registry.yarnpkg.com/vue/-/vue-2.6.12.tgz#f5ebd4fa6bd2869403e29a896aed4904456c9123"
+  integrity sha512-uhmLFETqPPNyuLLbsKz6ioJ4q7AZHzD8ZVFNATNyICSZouqP2Sz0rotWQC8UNBF6VGSCs5abnKJoStA6JbCbfg==

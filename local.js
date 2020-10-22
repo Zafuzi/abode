@@ -42,12 +42,353 @@ let scale = 1;
 
 let dragging;
 
+let Icons = {
+    credit: "images/tile.png",
+    steel: "images/steel.png",
+    oxygen: "images/oxygen.png",
+    methane: "images/methane.png",
+    rocket: "images/rocket.png",
+    station: "images/station.png",
+    power: "images/power.png",
+    solar: "images/power.png",
+    hydrogen: "images/tile.png",
+    water: "images/water.png",
+    carbon: "images/carbon.png",
+    grass: "images/tile.png",
+    iron: "images/iron.png",
+    slag: "images/tile.png",
+    trees: "images/trees.png",
+    silicate: "images/tile.png",
+    factory: "images/factory.png",
+    tank: "images/tile.png",
+    tile: "images/tile.png",
+    splitter: "images/tile.png",
+    combiner: "images/tile.png",
+}
+
+let node_colors = {
+    any: "#fff",
+    power: "#fff3a6",
+    solar: "#fff3a6",
+    oxygen: "#ffa6a6",
+    hydrogen: "#fff",
+    methane: "#a6fffe",
+    water: "#a6caff",
+    steel: "#999",
+    grass: "#a6ffaf",
+    carbon: "#58637a",
+    slag: "#c9bbab",
+    iron: "#ba7254",
+    rocket: "#ff99e6",
+    silicates: "#b6c9a5",
+    trees: "#2E6230",
+    carbon_dioxide: "#ffffff",
+    food: "#ffffff",
+    tile: "pink",
+}
+
+let rates = {
+    solar: {
+        power: {
+            production_rate: 20
+        }
+    },
+    water_pump: {
+        power: {
+            usage_rate: 10
+        },
+        water: {
+            production_rate: 100
+        }
+    },
+    combiner: {
+        any: {
+            usage_rate: 0,
+            production_rate: 0
+        }
+    }
+}
+
+let factories = [];
+let factory_font_size = 24;
+let factory_icon_size = 24;
+let factory_padding = 5;
+let factory_font = factory_font_size + "px monospace";
+
+let factory = function(type = "empty", name = "Empty and Useless", icon = Icons.tile, inputs = [], outputs = [], x = 100, y = 100) {
+    let o = {
+        type: type,
+        name: name,
+        icon: icon,
+        inputs: inputs,
+        outputs: outputs,
+        x: x,
+        y: y,
+        w: 100,
+        h: 0,
+        resources: {},
+        connections: []
+    }
+
+    let img = new Image();
+    img.src = icon;
+    o.icon = img;
+
+    o.update = function() {
+
+        let self = this;
+        self.connections = [];
+
+        let name_height = ctx.measureText(self.name).actualBoundingBoxAscent;
+        self.h = (factory_icon_size + factory_padding * 4) - (name_height / 2);
+        self.header_height = self.h;
+        self.dy = self.y + self.header_height + 20;
+
+        // calc inputs positions
+        self.inputs.forEach(input => {
+            self.update_node(input)
+        })
+
+        // calc output positions
+        self.outputs.forEach(output => {
+            self.update_node(output)
+        })
+
+        self.calc_connections();
+
+    }
+
+    o.draw = function() {
+
+        let self = this;
+
+        // draw the factory box
+        ctx.beginPath();
+        ctx.fillStyle = "#222233";
+        ctx.fillRect(self.x, self.y, self.w, self.h);
+        ctx.strokeStyle = "#444";
+        ctx.strokeRect(self.x, self.y, self.w, self.h);
+        ctx.closePath()
+
+        // Draw the header
+        ctx.fillStyle = "#fff";
+        ctx.font = factory_font;
+        let name_height = ctx.measureText(self.name).actualBoundingBoxAscent;
+        ctx.fillText(
+            self.name,
+            self.x + factory_icon_size + (factory_padding * 3),
+            self.y + (factory_icon_size + factory_padding * 2) - name_height / 2 // trying to align the image and font vertically in the center
+        );
+        if (ctx.measureText(self.name).width + factory_font_size + factory_padding >= self.w) {
+            self.w = ctx.measureText(self.name).width + factory_font_size + (factory_padding * 4); // 3 paddings : 1 for the image, 1 for the title, 1 for the end
+        }
+
+        // Draw the icon
+        ctx.beginPath();
+        ctx.drawImage(
+            self.icon,
+            0, 0,
+            self.icon.width, self.icon.height,
+            self.x + factory_padding, self.y + factory_padding,
+            factory_icon_size, factory_icon_size
+        );
+        ctx.closePath();
+
+        // draw inputs
+        self.inputs.forEach(input => {
+            self.draw_node(input);
+        })
+
+        // draw outputs
+        self.outputs.forEach(output => {
+            self.draw_node(output);
+        })
+
+    }
+
+    o.update_node = function(n) {
+        let self = this;
+        let name = (n.type == "input" ? n.usage_rate : n.production_rate) + (n.unit || "u/s") + " | " + n.name
+        let name_width = ctx.measureText(name).width + (n.r * 2) + 10;
+        if (name_width > self.w) {
+            self.w = name_width
+        }
+
+        n.x = n.type == "input" ? self.x : self.x + self.w;
+        n.y = self.dy;
+
+        // Make sure that my factory is tall enough for every input
+        self.dy += (n.r * 2) + 10;
+        self.h += ((factory_padding * 3) + (n.r * 2));
+
+        if (!self.resources[n.id]) {
+            self.resources[n.id] = rates[n.id] || {};
+        }
+    }
+
+    o.draw_node = function(n) {
+        ctx.beginPath();
+        ctx.fillStyle = node_colors[n.id];
+        ctx.arc(n.x, n.y, n.r, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.closePath();
+
+        let name = (n.type == "input" ? n.usage_rate : n.production_rate) + (n.unit || "u/s") + " | " + n.name
+        if (n.type == "input") {
+            ctx.beginPath();
+            ctx.fillText(name, n.x + n.r * 2, n.y + n.r / 2);
+            ctx.closePath();
+        } else {
+            ctx.beginPath();
+            ctx.fillText(name, n.x - ctx.measureText(name).width - n.r * 2, n.y + n.r / 2);
+            ctx.closePath();
+        }
+    }
+
+    o.calc_connections = function() {
+        let self = this;
+        let m = self.outputs;
+        m.forEach(o => {
+            if (o.connected) {
+
+                let p = o.connected; // whatever I am connected to
+                if (p.remove_on_mouse_up && !mousedown) {
+                    // This only occurs when I am dragging from a connector to attach it somewhere
+                    // So the connector in this case is my mouse
+                    // start by clearing the connection
+                    // TODO make some allow multiple connections??
+                    o.connected = null;
+
+                    // first check if I am dropping this onto another connector
+                    factories.forEach(f => {
+                        f.inputs.forEach(i => {
+                            if (i.id == o.id || i.any) {
+
+                                if (hit_rad(i)) {
+
+                                    if (i.connected && i.connected.connected == i) {
+                                        // Tell the ouput we are connected to, to forget about our connection
+                                        // It's over Brian. Seriously, move on.
+                                        i.connected.connected = null;
+                                        o.connected = null;
+                                        i.connected = null;
+                                    }
+                                    o.connected = i; // connect them
+                                    i.connected = o;
+                                }
+                            }
+                        })
+                    })
+
+                    return;
+                }
+
+                let connection = {};
+                let left = o.x > p.x ? p : o;
+
+                connection.remote_node = p;
+
+                let middle = (o.x + p.x) / 2; // The extact middle between these two connections
+
+
+                // Bezier curve needs
+                // X, Y, Control Point 1, Control Point 2
+                if (o == left) {
+                    let cp1 = {
+                        x: middle,
+                        y: o.y
+                    }
+                    let cp2 = {
+                        x: middle,
+                        y: p.y
+                    }
+                    connection.x = o.x;
+                    connection.y = o.y;
+                    connection.cp1 = cp1;
+                    connection.cp2 = cp2;
+                    connection.px = p.x;
+                    connection.py = p.y;
+                } else {
+                    let cp1 = {
+                        x: middle,
+                        y: p.y
+                    }
+                    let cp2 = {
+                        x: middle,
+                        y: o.y
+                    }
+                    connection.x = o.x;
+                    connection.y = o.y;
+                    connection.cp1 = cp1;
+                    connection.cp2 = cp2;
+                    connection.px = p.x;
+                    connection.py = p.y;
+                }
+
+                connection.strokeStyle = node_colors[o.id];
+                self.connections.push(connection);
+            }
+        });
+    }
+
+    o.add_connection = function(
+        io,
+        type = "input",
+        id = "tile",
+        name = "Empty Connector",
+        unit = "u",
+        production_rate = 0,
+        usage_rate = 0
+    ) {
+        let self = this;
+        let o = {
+            type: type,
+            id: id,
+            name: name,
+            unit: unit,
+            production_rate: production_rate,
+            usage_rate: usage_rate,
+            r: 10,
+            any: id == "any" ? true : false
+        }
+        self[io].push(o);
+    }
+
+    return o;
+}
+
+var water_pump = function() {
+    let fac = factory("water_pump", "Water Pump");
+    fac.add_connection("inputs", "input", "power", "power", "kW", 0, 10);
+    fac.add_connection("outputs", "output", "water", "Water", "L", 100, 0);
+    factories.push(fac);
+}
+
+var solar = function() {
+    let fac = factory("solar", "Solar Panels");
+    fac.add_connection("outputs", "output", "power", "Solar Power", "kW", 20, 0);
+    factories.push(fac);
+}
+
+var combiner = function() {
+    let fac = factory("combiner", "Combiner");
+    fac.add_connection("outputs", "output", "any", "Any", "u", 0, 0);
+    fac.add_connection("inputs", "input", "any", "Any", "u", 0, 0);
+    fac.add_connection("inputs", "input", "any", "Any", "u", 0, 0);
+    factories.push(fac);
+}
+
 addEventListener("load", () => {
     let s = document.querySelectorAll(".create_factory");
     s.forEach(b => {
         b.addEventListener("click", (e) => {
             let type = b.dataset.type;
-            FactoryTypes[type]();
+            console.log(type);
+            if (window[type]) {
+                window[type]();
+            } else {
+                console.error("Did you forget to make the create function for: ", type)
+            }
         })
     });
 })
@@ -85,10 +426,7 @@ let loop = function() {
             ctx.closePath();
         });
     });
-
-    factories.forEach(f => {
-        f.draw();
-    })
+    factories.forEach(f => { f.draw() });
 
     if (mousedown) {
         if (dragging) {
@@ -110,7 +448,7 @@ let loop = function() {
                         diffy: (my - f.y)
                     }
                 }
-                f.outputs.forEach(o => {
+                f.outputs.concat(f.inputs).forEach(o => {
                     if (hit_rad(o)) {
 
                         // create a dummy "connector" for the output to draw a curve to
@@ -133,7 +471,7 @@ let loop = function() {
         }
     }
 
-    /*
+    /* // This is the code for the context wheel
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     // draw the menu
